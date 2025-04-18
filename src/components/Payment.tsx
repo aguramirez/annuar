@@ -12,7 +12,7 @@ ticketCount:any;
 
 interface PaymentProps {
   movie: Movie;
-  showtime: { date: string; time: string };
+  showtime: { date: string; time: string } | null;
   ticketCount: number;
   selectedSeats: string[];
 }
@@ -89,8 +89,8 @@ const Payment: React.FC<PaymentProps> = ({
               <p className="mb-4">Tus entradas han sido reservadas correctamente.</p>
               <div className="payment-summary mb-4">
                 <h5>{movie.title}</h5>
-                <p className="mb-1"><strong>Fecha:</strong> {formatDate(showtime.date)}</p>
-                <p className="mb-1"><strong>Horario:</strong> {showtime.time}</p>
+                {/* <p className="mb-1"><strong>Fecha:</strong> {formatDate(showtime.date)}</p> */}
+                <p className="mb-1"><strong>Horario:</strong> {showtime?.time}</p>
                 <p className="mb-1"><strong>Entradas:</strong> {ticketCount}</p>
                 <p className="mb-1"><strong>Asientos:</strong> {selectedSeats.join(', ')}</p>
                 <p className="mb-0"><strong>Total:</strong> ${totalAmount.toLocaleString('es-AR')}</p>
@@ -219,8 +219,8 @@ const Payment: React.FC<PaymentProps> = ({
                   
                   <div className="payment-summary">
                     <h5>{movie.title}</h5>
-                    <p className="mb-1"><strong>Fecha:</strong> {formatDate(showtime.date)}</p>
-                    <p className="mb-1"><strong>Horario:</strong> {showtime.time}</p>
+                    {/* <p className="mb-1"><strong>Fecha:</strong> {formatDate(showtime.date)}</p> */}
+                    <p className="mb-1"><strong>Horario:</strong> {showtime?.time}</p>
                     <p className="mb-1"><strong>Entradas:</strong> {ticketCount}</p>
                     <p className="mb-0"><strong>Asientos:</strong> {selectedSeats.join(', ')}</p>
                   </div>

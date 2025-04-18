@@ -8,6 +8,7 @@ import Login from './components/Login';
 import Payment from './components/Payment';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import moviesData from './data/movies.json';
+import { ThemeProvider } from './context/ThemeContext';
 
 const App: React.FC = () => {
   const [selectedMovie, setSelectedMovie] = useState<any>(null);
@@ -17,46 +18,48 @@ const App: React.FC = () => {
   const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
 
   return (
-    <Router>
-      <div className="app-container">
-        <Routes>
-          <Route path="/" element={<Home movies={moviesData.movies} setSelectedMovie={setSelectedMovie} />} />
-          <Route path="/movie/:id" element={
-            <MovieDetail 
-              movie={selectedMovie} 
-              setSelectedShowtime={setSelectedShowtime}
-              setTicketCount={setTicketCount}
-            />
-          } />
-          <Route path="/seats" element={
-            selectedMovie && selectedShowtime ? 
-            <SeatSelection 
-              movie={selectedMovie}
-              showtime={selectedShowtime}
-              ticketCount={ticketCount}
-              selectedSeats={selectedSeats}
-              setSelectedSeats={setSelectedSeats}
-            /> : 
-            <Navigate to="/" />
-          } />
-          <Route path="/login" element={
-            selectedSeats.length > 0 ? 
-            <Login setIsLoggedIn={setIsLoggedIn} /> : 
-            <Navigate to="/" />
-          } />
-          <Route path="/payment" element={
-            // isLoggedIn ? 
-            // <Payment 
-            //   movie={selectedMovie}
-            //   showtime={selectedShowtime}
-            //   ticketCount={ticketCount}
-            //   selectedSeats={selectedSeats}
-            // /> : 
-            <Navigate to="/login" />
-          } />
-        </Routes>
-      </div>
-    </Router>
+    <ThemeProvider>
+      <Router>
+        <div className="app-container">
+          <Routes>
+            <Route path="/" element={<Home movies={moviesData.movies} setSelectedMovie={setSelectedMovie} />} />
+            <Route path="/movie/:id" element={
+              <MovieDetail
+                movie={selectedMovie}
+                setSelectedShowtime={setSelectedShowtime}
+                setTicketCount={setTicketCount}
+              />
+            } />
+            <Route path="/seats" element={
+              selectedMovie && selectedShowtime ?
+              <SeatSelection
+                movie={selectedMovie}
+                showtime={selectedShowtime}
+                ticketCount={ticketCount}
+                selectedSeats={selectedSeats}
+                setSelectedSeats={setSelectedSeats}
+              /> :
+              <Navigate to="/" />
+            } />
+            <Route path="/login" element={
+              selectedSeats.length > 0 ?
+              <Login setIsLoggedIn={setIsLoggedIn} /> :
+              <Navigate to="/" />
+            } />
+            <Route path="/payment" element={
+              isLoggedIn ?
+              <Payment
+                movie={selectedMovie}
+                showtime={selectedShowtime}
+                ticketCount={ticketCount}
+                selectedSeats={selectedSeats}
+              /> :
+              <Navigate to="/login" />
+            } />
+          </Routes>
+        </div>
+      </Router>
+    </ThemeProvider>
   );
 }
 
