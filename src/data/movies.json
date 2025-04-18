@@ -1,0 +1,160 @@
+{
+    "movies": [
+      {
+        "id": 1,
+        "title": "El Resplandor Eterno",
+        "director": "María González",
+        "genre": ["Drama", "Ciencia Ficción"],
+        "duration": 128,
+        "releaseDate": "2024-03-15",
+        "poster": "https://via.placeholder.com/300x450/B22222/FFFFFF?text=El+Resplandor+Eterno",
+        "synopsis": "En un futuro donde los recuerdos pueden transferirse, un científico intenta preservar la memoria de su esposa fallecida con consecuencias inesperadas.",
+        "trailerUrl": "https://www.youtube.com/embed/LM8xbaDVDVs",
+        "rating": 4.7,
+        "showtimes": [
+          {
+            "date": "2025-04-19",
+            "times": ["14:30", "17:45", "20:15"]
+          },
+          {
+            "date": "2025-04-20",
+            "times": ["15:00", "18:00", "21:00"]
+          },
+          {
+            "date": "2025-04-21",
+            "times": ["16:30", "19:45", "22:15"]
+          }
+        ]
+      },
+      {
+        "id": 2,
+        "title": "Sendero al Olvido",
+        "director": "Carlos Vidal",
+        "genre": ["Thriller", "Misterio"],
+        "duration": 115,
+        "releaseDate": "2024-04-05",
+        "poster": "https://via.placeholder.com/300x450/483D8B/FFFFFF?text=Sendero+al+Olvido",
+        "synopsis": "Un detective persigue a un asesino en serie en un pequeño pueblo mientras lucha contra sus propios demonios del pasado.",
+        "trailerUrl": "https://www.youtube.com/embed/p-aNIqL3I5M",
+        "rating": 4.5,
+        "showtimes": [
+          {
+            "date": "2025-04-19",
+            "times": ["15:30", "18:15", "21:30"]
+          },
+          {
+            "date": "2025-04-20",
+            "times": ["14:00", "17:30", "20:45"]
+          },
+          {
+            "date": "2025-04-21",
+            "times": ["15:45", "18:30", "21:15"]
+          }
+        ]
+      },
+      {
+        "id": 3,
+        "title": "Melodía del Destino",
+        "director": "Laura Sánchez",
+        "genre": ["Romance", "Musical"],
+        "duration": 132,
+        "releaseDate": "2024-03-22",
+        "poster": "https://via.placeholder.com/300x450/006400/FFFFFF?text=Melodía+del+Destino",
+        "synopsis": "Dos músicos de mundos diferentes se enamoran mientras persiguen sus sueños en la vibrante escena musical de Buenos Aires.",
+        "trailerUrl": "https://www.youtube.com/embed/oMquQ_7E6mQ",
+        "rating": 4.9,
+        "showtimes": [
+          {
+            "date": "2025-04-19",
+            "times": ["14:00", "17:00", "20:00"]
+          },
+          {
+            "date": "2025-04-20",
+            "times": ["15:30", "18:30", "21:30"]
+          },
+          {
+            "date": "2025-04-21",
+            "times": ["16:00", "19:00", "22:00"]
+          }
+        ]
+      },
+      {
+        "id": 4,
+        "title": "Guardianes del Tiempo",
+        "director": "Roberto Méndez",
+        "genre": ["Acción", "Aventura"],
+        "duration": 145,
+        "releaseDate": "2024-04-12",
+        "poster": "https://via.placeholder.com/300x450/8B4513/FFFFFF?text=Guardianes+del+Tiempo",
+        "synopsis": "Un grupo de héroes debe viajar a través del tiempo para evitar una catástrofe que amenaza con destruir el mundo tal como lo conocemos.",
+        "trailerUrl": "https://www.youtube.com/embed/8YjFbMbfXaQ",
+        "rating": 4.6,
+        "showtimes": [
+          {
+            "date": "2025-04-19",
+            "times": ["15:00", "18:45", "21:45"]
+          },
+          {
+            "date": "2025-04-20",
+            "times": ["14:30", "17:45", "21:00"]
+          },
+          {
+            "date": "2025-04-21",
+            "times": ["15:15", "18:00", "21:30"]
+          }
+        ]
+      },
+      {
+        "id": 5,
+        "title": "Susurros del Pasado",
+        "director": "Elena Vargas",
+        "genre": ["Terror", "Paranormal"],
+        "duration": 108,
+        "releaseDate": "2024-04-01",
+        "poster": "https://via.placeholder.com/300x450/2F4F4F/FFFFFF?text=Susurros+del+Pasado",
+        "synopsis": "Una familia se muda a una antigua casa donde comienzan a ocurrir fenómenos inexplicables relacionados con un oscuro secreto.",
+        "trailerUrl": "https://www.youtube.com/embed/QaE6TYEDZz8",
+        "rating": 4.3,
+        "showtimes": [
+          {
+            "date": "2025-04-19",
+            "times": ["16:00", "19:15", "22:30"]
+          },
+          {
+            "date": "2025-04-20",
+            "times": ["16:30", "19:30", "22:00"]
+          },
+          {
+            "date": "2025-04-21",
+            "times": ["17:00", "20:15", "22:45"]
+          }
+        ]
+      },
+      {
+        "id": 6,
+        "title": "Horizontes de Libertad",
+        "director": "Miguel Torres",
+        "genre": ["Drama", "Histórico"],
+        "duration": 138,
+        "releaseDate": "2024-03-29",
+        "poster": "https://via.placeholder.com/300x450/4682B4/FFFFFF?text=Horizontes+de+Libertad",
+        "synopsis": "La historia de un grupo de personas que luchan por su libertad en medio de un conflicto político en la década de 1970.",
+        "trailerUrl": "https://www.youtube.com/embed/e1kOziiWGlg",
+        "rating": 4.8,
+        "showtimes": [
+          {
+            "date": "2025-04-19",
+            "times": ["14:15", "17:30", "20:30"]
+          },
+          {
+            "date": "2025-04-20",
+            "times": ["15:15", "18:15", "21:15"]
+          },
+          {
+            "date": "2025-04-21",
+            "times": ["16:15", "19:30", "22:30"]
+          }
+        ]
+      }
+    ]
+  }
