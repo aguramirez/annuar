@@ -51,7 +51,7 @@ const FeaturedMovieSlide: React.FC<FeaturedMovieSlideProps> = ({ movie, onSelect
             <Link to={`/movie/${movie.id}`} onClick={onSelectMovie}>
               <Button variant="primary" className="featured-movie-btn me-2">
                 <i className="bi bi-info-circle me-2"></i>
-                Ver detalles
+                Comprar entradas
               </Button>
             </Link>
             <a href={movie.trailerUrl} target="_blank" rel="noopener noreferrer">
@@ -63,7 +63,7 @@ const FeaturedMovieSlide: React.FC<FeaturedMovieSlideProps> = ({ movie, onSelect
           </div>
         </div>
         <div className="featured-movie-image-container">
-          <img src={movie.poster} alt={movie.title} className="featured-movie-image" />
+          {/* <img src={movie.poster} alt={movie.title} className="featured-movie-image" /> */}
           <div className="featured-movie-poster-shadow"></div>
         </div>
       </div>

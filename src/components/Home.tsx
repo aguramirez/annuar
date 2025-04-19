@@ -67,7 +67,7 @@ const Home: React.FC<HomeProps> = ({ movies, setSelectedMovie }) => {
 
       <Container>
         <div className="text-center mb-4">
-          <h1 className="page-heading display-4">Annuar Shopping Cine</h1>
+          <h1 className="page-heading display-4">annuar shopping cine</h1>
           <p className="lead text-muted mb-5">Descubre los mejores estrenos y disfruta una experiencia única de cine</p>
         </div>
 
@@ -94,7 +94,7 @@ const Home: React.FC<HomeProps> = ({ movies, setSelectedMovie }) => {
           </Carousel>
         </div>
 
-        <div className="genre-filter mb-4">
+        {/* <div className="genre-filter mb-4">
           <h2 className="section-title mb-3">
             <i className="bi bi-film me-2"></i>
             Cartelera Completa
@@ -112,7 +112,7 @@ const Home: React.FC<HomeProps> = ({ movies, setSelectedMovie }) => {
               </Button>
             ))}
           </div>
-        </div>
+        </div> */}
 
         <Row>
           {filteredMovies.map((movie, index) => (
@@ -149,9 +149,9 @@ const Home: React.FC<HomeProps> = ({ movies, setSelectedMovie }) => {
                       {movie.genre.join(', ')} | {movie.duration} min
                     </small>
                   </Card.Text>
-                  <Card.Text>
+                  {/* <Card.Text>
                     {movie.synopsis.substring(0, 100)}...
-                  </Card.Text>
+                  </Card.Text> */}
                   <div className="d-flex justify-content-between align-items-center">
                     <div className="rating">
                       {movie.rating.toFixed(1)}

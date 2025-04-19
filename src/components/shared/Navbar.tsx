@@ -30,7 +30,7 @@ const Navbar: React.FC<NavbarProps> = ({
               alt="Annuar Shopping Cine"
               className="logo-img"
             />
-            Annuar Shopping Cine
+            Home
           </Link>
         </div>
         <ThemeToggle />
