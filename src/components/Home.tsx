@@ -65,19 +65,19 @@ const Home: React.FC<HomeProps> = ({ movies, setSelectedMovie }) => {
     <div className="home-page">
       <Navbar />
       
-      <div className="hero-section">
+      {/* <div className="hero-section">
         <Container>
           <div className="text-center mb-5">
             <h1 className="display-4 hero-title">Annuar Shopping <span className="text-primary">Cine</span></h1>
             <p className="lead hero-subtitle">Descubre los mejores estrenos y disfruta de una experiencia única</p>
           </div>
         </Container>
-      </div>
+      </div> */}
 
       {/* Carrusel de Películas Destacadas */}
       <section className={`featured-section mb-5 ${isCarouselLoaded ? 'carousel-loaded' : ''}`}>
         <Container>
-          <div className="section-header d-flex align-items-center justify-content-between mb-4">
+          {/* <div className="section-header d-flex align-items-center justify-content-between mb-4">
             <h2 className="section-title">
               <i className="bi bi-stars me-2"></i>
               Películas Destacadas
@@ -85,7 +85,7 @@ const Home: React.FC<HomeProps> = ({ movies, setSelectedMovie }) => {
             <Link to="/movies" className="view-all-link">
               Ver todas <i className="bi bi-arrow-right"></i>
             </Link>
-          </div>
+          </div> */}
           
           <Carousel
             className="featured-carousel"
@@ -108,7 +108,7 @@ const Home: React.FC<HomeProps> = ({ movies, setSelectedMovie }) => {
       {/* Filtros por género */}
       <section className="filter-section mb-5">
         <Container>
-          <div className="section-header d-flex align-items-center justify-content-between mb-4">
+          {/* <div className="section-header d-flex align-items-center justify-content-between mb-4">
             <h2 className="section-title">
               <i className="bi bi-film me-2"></i>
               Cartelera Completa
@@ -128,7 +128,7 @@ const Home: React.FC<HomeProps> = ({ movies, setSelectedMovie }) => {
                 </Button>
               ))}
             </div>
-          </div>
+          </div> */}
           
           <Row className="movie-grid">
             {filteredMovies.map((movie, index) => (
@@ -153,7 +153,7 @@ const Home: React.FC<HomeProps> = ({ movies, setSelectedMovie }) => {
                           className="btn btn-primary card-btn"
                           onClick={() => setSelectedMovie(movie)}
                         >
-                          Ver detalles
+                          Comprar entradas
                         </Link>
                       </div>
                     </div>
@@ -210,6 +210,7 @@ const Home: React.FC<HomeProps> = ({ movies, setSelectedMovie }) => {
           </Row>
         </Container>
       </section>
+      <footer>Developed by yova.ai</footer>
     </div>
   );
 };

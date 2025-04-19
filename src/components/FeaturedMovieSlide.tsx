@@ -72,7 +72,7 @@ const FeaturedMovieSlide: React.FC<FeaturedMovieSlideProps> = ({ movie, onSelect
           </div>
         </div>
         <div className="featured-movie-image-container">
-          <img src={movie.poster} alt={movie.title} className="featured-movie-image" />
+          {/* <img src={movie.poster} alt={movie.title} className="featured-movie-image" /> */}
           <div className="featured-movie-poster-shadow"></div>
         </div>
       </div>

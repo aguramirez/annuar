@@ -58,7 +58,7 @@ const Navbar: React.FC<NavbarProps> = ({
               alt="Annuar Shopping Cine"
               className="logo-img"
             />
-            <span>Annuar Cine</span>
+            <span>Annuar Shopping Cine</span>
           </Link>
         </div>
 
@@ -68,13 +68,13 @@ const Navbar: React.FC<NavbarProps> = ({
             <Nav.Link as={Link} to="/" className={`nav-link ${isActive('/') ? 'active' : ''}`}>
               <i className="bi bi-house-door me-1"></i> Inicio
             </Nav.Link>
-            <Nav.Link as={Link} to="/movies" className={`nav-link ${isActive('/movies') ? 'active' : ''}`}>
+            <Nav.Link as={Link} to="/" className={`nav-link ${isActive('/movies') ? 'active' : ''}`}>
               <i className="bi bi-film me-1"></i> Cartelera
             </Nav.Link>
-            <Nav.Link as={Link} to="/promos" className={`nav-link ${isActive('/promos') ? 'active' : ''}`}>
+            <Nav.Link as={Link} to="/" className={`nav-link ${isActive('/promos') ? 'active' : ''}`}>
               <i className="bi bi-ticket-perforated me-1"></i> Promociones
             </Nav.Link>
-            <Nav.Link as={Link} to="/contact" className={`nav-link ${isActive('/contact') ? 'active' : ''}`}>
+            <Nav.Link as={Link} to="/" className={`nav-link ${isActive('/contact') ? 'active' : ''}`}>
               <i className="bi bi-envelope me-1"></i> Contacto
             </Nav.Link>
           </Nav>

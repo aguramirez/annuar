@@ -54,19 +54,6 @@ const Payment: React.FC<PaymentProps> = ({
   
   return (
     <>
-      <Navbar bg="light" expand="lg" className="mb-4">
-        <Container>
-          <Navbar.Brand href="/">
-            <img 
-              src="/logo.png" 
-              alt="Annuar Shopping Cine" 
-              className="logo-img" 
-            />
-            Annuar Shopping Cine
-          </Navbar.Brand>
-        </Container>
-      </Navbar>
-
       <Container className="py-4">
         <Button 
           variant="outline-secondary" 
@@ -76,7 +63,7 @@ const Payment: React.FC<PaymentProps> = ({
         >
           &lt; Volver
         </Button>
-
+        
         <h1 className="page-heading">Pago de Entradas</h1>
         
         {isComplete ? (
@@ -200,13 +187,13 @@ const Payment: React.FC<PaymentProps> = ({
                       </Button>
                     </div>
                     
-                    <div className="text-center mt-3">
+                    {/* <div className="text-center mt-3">
                       <img 
-                        src="https://via.placeholder.com/300x50/FFFFFF/333333?text=Mercado+Pago+Secure" 
+                        src=" " 
                         alt="Mercado Pago Secure" 
                         className="payment-security-img" 
                       />
-                    </div>
+                    </div> */}
                   </Form>
                 </Card.Body>
               </Card>

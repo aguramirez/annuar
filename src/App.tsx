@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import 'bootstrap/dist/css/bootstrap.min.css';
+import 'bootstrap-icons/font/bootstrap-icons.css';
 import './App.css';
 import Home from './components/Home';
 import MovieDetail from './components/MovieDetail';
@@ -9,6 +10,7 @@ import Payment from './components/Payment';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import moviesData from './data/movies.json';
 import { ThemeProvider } from './context/ThemeContext';
+// import ScrollToTop from './components/ScrollToTop';
 
 const App: React.FC = () => {
   const [selectedMovie, setSelectedMovie] = useState<any>(null);
@@ -20,6 +22,7 @@ const App: React.FC = () => {
   return (
     <ThemeProvider>
       <Router>
+        {/* <ScrollToTop /> */}
         <div className="app-container">
           <Routes>
             <Route path="/" element={<Home movies={moviesData.movies} setSelectedMovie={setSelectedMovie} />} />
