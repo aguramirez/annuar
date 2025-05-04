@@ -1,0 +1,279 @@
+/* Footer Styles */
+.footer {
+    background-color: var(--card-bg-color);
+    color: var(--text-color);
+    border-top: 1px solid var(--border-color);
+  }
+  
+  .footer-heading {
+    font-family: var(--font-heading);
+    font-weight: 600;
+    color: var(--primary-color);
+    position: relative;
+  }
+  
+  .footer-text {
+    color: var(--text-secondary);
+    font-size: 0.95rem;
+  }
+  
+  .footer-contact {
+    font-size: 0.95rem;
+  }
+  
+  .footer-contact i {
+    color: var(--primary-color);
+  }
+  
+  .footer-links li {
+    transition: var(--transition);
+  }
+  
+  .footer-links li:hover {
+    transform: translateX(3px);
+  }
+  
+  .footer-link {
+    color: var(--text-secondary);
+    text-decoration: none;
+    transition: var(--transition);
+  }
+  
+  .footer-link:hover {
+    color: var(--primary-color);
+  }
+  
+  .footer-hours {
+    font-size: 0.95rem;
+  }
+  
+  .social-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background-color: var(--gray-color);
+    color: var(--text-color);
+    font-size: 1.2rem;
+    transition: var(--transition);
+  }
+  
+  .social-link:hover {
+    background-color: var(--primary-color);
+    color: white;
+    transform: translateY(-3px);
+  }
+  
+  .footer-subscribe .form-control {
+    background-color: var(--background-color);
+    border: 1px solid var(--border-color);
+    color: var(--text-color);
+  }
+  
+  .footer-divider {
+    border-color: var(--border-color);
+  }
+  
+  .footer-bottom {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+  }
+  
+  /* Validator Styles */
+  .validation-container {
+    max-width: 800px;
+    margin: 0 auto;
+  }
+  
+  .camera-viewport {
+    position: relative;
+    width: 100%;
+    height: 300px;
+    background-color: #000;
+    overflow: hidden;
+    border-radius: var(--border-radius);
+  }
+  
+  .scanning-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    border: 2px solid rgba(var(--primary-color-rgb), 0.5);
+  }
+  
+  .scanning-line {
+    position: absolute;
+    height: 2px;
+    width: 100%;
+    background-color: var(--primary-color);
+    animation: scan 2s infinite linear;
+  }
+  
+  @keyframes scan {
+    0% { top: 0; }
+    50% { top: 100%; }
+    100% { top: 0; }
+  }
+  
+  .result-icon {
+    font-size: 5rem;
+    margin-bottom: 1rem;
+  }
+  
+  .valid-icon {
+    color: #28a745;
+  }
+  
+  .invalid-icon {
+    color: #dc3545;
+  }
+  
+  .detail-item {
+    margin-bottom: 0.5rem;
+  }
+  
+  .detail-label {
+    font-weight: 600;
+    width: 100px;
+    display: inline-block;
+  }
+  
+  /* POS Styles */
+  .category-btn {
+    white-space: nowrap;
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+  }
+  
+  .product-card {
+    transition: var(--transition);
+    border-radius: var(--border-radius);
+    overflow: hidden;
+  }
+  
+  .product-card:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--shadow-md);
+  }
+  
+  .product-img-container {
+    height: 150px;
+    overflow: hidden;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: var(--background-color);
+  }
+  
+  .product-img {
+    max-height: 100%;
+    max-width: 100%;
+    object-fit: contain;
+  }
+  
+  .product-price {
+    font-weight: 600;
+    font-size: 1.1rem;
+    color: var(--primary-color);
+  }
+  
+  .combo-card {
+    transition: var(--transition);
+  }
+  
+  .combo-card:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--shadow-md);
+  }
+  
+  .combo-img-container {
+    width: 100px;
+    padding: 0.5rem;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  
+  .combo-img {
+    max-width: 100%;
+    max-height: 100px;
+    object-fit: contain;
+  }
+  
+  .cart-card {
+    position: sticky;
+    top: 80px;
+  }
+  
+  .quantity-control {
+    display: flex;
+    align-items: center;
+  }
+  
+  /* Admin Dashboard Styles */
+  .stat-card {
+    border-radius: var(--border-radius);
+    border: none;
+    box-shadow: var(--shadow-sm);
+    transition: var(--transition);
+  }
+  
+  .stat-card:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--shadow-md);
+  }
+  
+  .stat-icon-container {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+  }
+  
+  .stat-value {
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: var(--text-color);
+  }
+  
+  .stat-title {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+  }
+  
+  .trend-badge {
+    padding: 0.25rem 0.5rem;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+  }
+  
+  .trend-up {
+    background-color: rgba(40, 167, 69, 0.1);
+    color: #28a745;
+  }
+  
+  .trend-down {
+    background-color: rgba(220, 53, 69, 0.1);
+    color: #dc3545;
+  }
+  
+  .trend-neutral {
+    background-color: rgba(108, 117, 125, 0.1);
+    color: #6c757d;
+  }
+  
+  .badge {
+    padding: 0.5rem 0.75rem;
+    border-radius: 20px;
+    font-weight: 500;
+  }

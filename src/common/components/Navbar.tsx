@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Container, Navbar as BootstrapNavbar, Nav } from 'react-bootstrap';
 import { Link, useLocation } from 'react-router-dom';
-import ThemeToggle from '../ThemeToggle';
+import ThemeToggle from '../../apps/website/pages/ThemeToggle';
 
 interface NavbarProps {
   showBackButton?: boolean;

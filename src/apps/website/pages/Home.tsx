@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Container, Row, Col, Card, Button, Carousel, Badge } from 'react-bootstrap';
-import Navbar from './shared/Navbar';
-import { useTheme } from '../context/ThemeContext';
+import Navbar from '../../../common/components/Navbar';
+import { useTheme } from '../../../common/context/ThemeContext';
 import FeaturedMovieSlide from './FeaturedMovieSlide';
 
 interface Movie {
@@ -129,7 +129,7 @@ const Home: React.FC<HomeProps> = ({ movies, setSelectedMovie }) => {
               ))}
             </div>
           </div> */}
-          
+          <h2>Cartelera del 12 al 23 de abril</h2>
           <Row className="movie-grid">
             {filteredMovies.map((movie, index) => (
               <Col

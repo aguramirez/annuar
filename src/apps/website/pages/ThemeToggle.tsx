@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { useTheme } from '../context/ThemeContext';
+import { useTheme } from '../../../common/context/ThemeContext';
 
 interface ThemeToggleProps {
   className?: string;

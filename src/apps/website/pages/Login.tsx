@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Container, Card, Button, Form } from 'react-bootstrap';
-import Navbar from './shared/Navbar';
+import Navbar from '../../../common/components/Navbar';
 
 interface LoginProps {
   setIsLoggedIn: (isLoggedIn: boolean) => void;
