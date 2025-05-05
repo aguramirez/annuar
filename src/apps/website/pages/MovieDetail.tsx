@@ -7,6 +7,7 @@ import showService, { Show } from '../../../common/services/showService';
 
 interface MovieDetailParams {
   id: string;
+  [key: string]: string | undefined;
 }
 
 const MovieDetail: React.FC = () => {

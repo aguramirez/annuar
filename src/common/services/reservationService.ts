@@ -1,6 +1,14 @@
 // src/common/services/reservationService.ts
 import { apiRequest } from './apiClient';
 
+export interface SeatSelection {
+  id: string;
+  row: string;
+  number: string;
+  seatType: string;
+  price: number;
+}
+
 export interface ReservationRequest {
   showId: string;
   seats: string[];
@@ -10,6 +18,7 @@ export interface ReservationRequest {
 export interface ReservationResponse {
   id: string;
   showId: string;
+  cinemaId: string; // Added this property which was missing
   movieTitle: string;
   roomName: string;
   startTime: string;
@@ -26,6 +35,9 @@ export interface ReservationResponse {
 }
 
 const reservationService = {
+  /**
+   * Create a new reservation
+   */
   createReservation: async (reservation: ReservationRequest): Promise<ReservationResponse> => {
     return apiRequest<ReservationResponse>({
       method: 'POST',
@@ -34,6 +46,9 @@ const reservationService = {
     });
   },
 
+  /**
+   * Get details for an existing reservation
+   */
   getReservationById: async (id: string): Promise<ReservationResponse> => {
     return apiRequest<ReservationResponse>({
       method: 'GET',
@@ -41,6 +56,9 @@ const reservationService = {
     });
   },
 
+  /**
+   * Cancel a reservation
+   */
   cancelReservation: async (id: string): Promise<{ success: boolean, message: string }> => {
     return apiRequest<{ success: boolean, message: string }>({
       method: 'DELETE',
@@ -48,7 +66,9 @@ const reservationService = {
     });
   },
 
-  // [POS] Crear reserva en taquilla
+  /**
+   * Create a reservation at the point of sale (POS)
+   */
   createPosReservation: async (reservation: ReservationRequest): Promise<ReservationResponse> => {
     return apiRequest<ReservationResponse>({
       method: 'POST',

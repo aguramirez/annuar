@@ -1,37 +1,48 @@
 // src/apps/website/pages/SeatSelection.tsx
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Container, Row, Col, Card, Button, Alert, Spinner } from 'react-bootstrap';
-import showService from '../../../common/services/showService';
-import reservationService from '../../../common/services/reservationService';
+import { Container, Row, Col, Card, Button, Alert, Spinner, Form } from 'react-bootstrap';
 import { useAuth } from '../../../auth/AuthContext';
-
-interface SeatSelectionParams {
-  showId: string;
-}
-
-interface Seat {
-  id: string;
-  row: string;
-  number: string;
-  seatType: string;
-  status: string;
-}
+import { SeatSelectionParams } from '../types/routeParams';
+import { useQuery } from '@tanstack/react-query';
+import showService, { Seat } from '../../../common/services/showService';
+import { useCreateReservation } from '../../../common/hooks/useReservationQueries';
 
 const SeatSelection: React.FC = () => {
   const { showId } = useParams<SeatSelectionParams>();
   const navigate = useNavigate();
   const { isAuthenticated } = useAuth();
   
-  const [showDetails, setShowDetails] = useState<any>(null);
-  const [seats, setSeats] = useState<Seat[]>([]);
   const [selectedSeats, setSelectedSeats] = useState<string[]>([]);
   const [ticketTypes, setTicketTypes] = useState<Record<string, string>>({});
-  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [processing, setProcessing] = useState(false);
   
-  // Precio base por tipo de asiento - en una aplicación real, esto vendría del backend
+  // Get show details using React Query
+  const { 
+    data: showDetails, 
+    isLoading: isLoadingShow,
+    error: showError 
+  } = useQuery({
+    queryKey: ['shows', showId],
+    queryFn: () => showService.getShow(showId || ''),
+    enabled: !!showId
+  });
+  
+  // Get seats for the show using React Query
+  const { 
+    data: seats, 
+    isLoading: isLoadingSeats,
+    error: seatsError 
+  } = useQuery({
+    queryKey: ['shows', showId, 'seats'],
+    queryFn: () => showService.getSeatsForShow(showId || ''),
+    enabled: !!showId
+  });
+  
+  // Mutation for creating reservation
+  const createReservation = useCreateReservation();
+  
+  // Price base by seat type - in a real app, this would come from the backend
   const seatPrices = {
     'standard': 800,
     'vip': 1200,
@@ -39,54 +50,28 @@ const SeatSelection: React.FC = () => {
     'accessible': 800
   };
 
-  useEffect(() => {
-    const fetchShowAndSeats = async () => {
-      if (!showId) return;
-      
-      try {
-        setLoading(true);
-        // Obtener detalles de la función
-        const showData = await showService.getShow(showId);
-        setShowDetails(showData);
-        
-        // Obtener asientos disponibles
-        const seatsData = await showService.getSeatsForShow(showId);
-        setSeats(seatsData);
-        
-        setError(null);
-      } catch (err) {
-        console.error('Error fetching show and seats:', err);
-        setError('No se pudieron cargar los datos. Por favor, intenta de nuevo más tarde.');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchShowAndSeats();
-  }, [showId]);
-
-  // Determinar el precio según el tipo de asiento
+  // Determine seat price based on its type
   const getSeatPrice = (seat: Seat) => {
     return seatPrices[seat.seatType.toLowerCase() as keyof typeof seatPrices] || seatPrices.standard;
   };
 
   const handleSeatClick = (seatId: string) => {
-    const seat = seats.find(s => s.id === seatId);
+    const seat = seats?.find(s => s.id === seatId);
     
-    // No permitir seleccionar asientos ocupados
+    // Don't allow selecting occupied seats
     if (seat?.status === 'occupied') return;
     
     setSelectedSeats(prevSelected => {
       if (prevSelected.includes(seatId)) {
-        // Deseleccionar asiento
+        // Deselect seat
         const newSelected = prevSelected.filter(id => id !== seatId);
-        // Eliminar el tipo de entrada asignado
+        // Remove assigned ticket type
         const newTicketTypes = { ...ticketTypes };
         delete newTicketTypes[seatId];
         setTicketTypes(newTicketTypes);
         return newSelected;
       } else {
-        // Seleccionar asiento y asignar tipo de entrada "ADULTO" por defecto
+        // Select seat and assign default "ADULT" ticket type
         setTicketTypes({
           ...ticketTypes,
           [seatId]: 'ADULT'
@@ -102,9 +87,9 @@ const SeatSelection: React.FC = () => {
       return;
     }
 
-    // Si no está autenticado, redirigir al login primero
+    // If not authenticated, redirect to login first
     if (!isAuthenticated) {
-      // Guardar la información de la selección en sessionStorage para recuperarla después
+      // Save selection info in sessionStorage to recover it later
       sessionStorage.setItem('selectedSeats', JSON.stringify({
         showId,
         seats: selectedSeats,
@@ -115,48 +100,47 @@ const SeatSelection: React.FC = () => {
     }
 
     try {
-      setProcessing(true);
-      // Crear reserva
+      // Create reservation
       const reservationRequest = {
         showId: showId || '',
         seats: selectedSeats,
         ticketTypes
       };
       
-      const reservation = await reservationService.createReservation(reservationRequest);
+      const reservation = await createReservation.mutateAsync(reservationRequest);
       
-      // Navegar a la página de pago
+      // Navigate to payment page
       navigate(`/payment/${reservation.id}`);
     } catch (err) {
       console.error('Error creating reservation:', err);
       setError('Hubo un problema al crear tu reserva. Por favor, intenta de nuevo.');
-    } finally {
-      setProcessing(false);
     }
   };
 
-// src/apps/website/pages/SeatSelection.tsx (continuación)
-  // Agrupar asientos por fila para renderizarlos
-  const seatsByRow = seats.reduce((acc, seat) => {
+  // Group seats by row for rendering
+  const seatsByRow = seats?.reduce((acc, seat) => {
     if (!acc[seat.row]) {
       acc[seat.row] = [];
     }
     acc[seat.row].push(seat);
     return acc;
-  }, {} as Record<string, Seat[]>);
+  }, {} as Record<string, Seat[]>) || {};
   
-  // Ordenar filas
+  // Sort rows
   const sortedRows = Object.keys(seatsByRow).sort();
   
-  // Calcular el total a pagar
+  // Calculate total to pay
   const calculateTotal = () => {
     return selectedSeats.reduce((total, seatId) => {
-      const seat = seats.find(s => s.id === seatId);
+      const seat = seats?.find(s => s.id === seatId);
       return total + (seat ? getSeatPrice(seat) : 0);
     }, 0);
   };
 
-  if (loading) {
+  const isLoading = isLoadingShow || isLoadingSeats || createReservation.isPending;
+  const loadingError = showError || seatsError;
+
+  if (isLoading && !loadingError) {
     return (
       <Container className="py-5 text-center">
         <Spinner animation="border" role="status">
@@ -166,15 +150,19 @@ const SeatSelection: React.FC = () => {
     );
   }
 
-  if (error) {
+  if (loadingError) {
     return (
       <Container className="py-5">
-        <Alert variant="danger">{error}</Alert>
+        <Alert variant="danger">
+          {loadingError instanceof Error 
+            ? loadingError.message 
+            : 'Error al cargar los datos. Por favor, intenta de nuevo más tarde.'}
+        </Alert>
       </Container>
     );
   }
 
-  if (!showDetails) {
+  if (!showDetails || !seats) {
     return (
       <Container className="py-5">
         <Alert variant="warning">No se encontró la función solicitada.</Alert>
@@ -192,6 +180,8 @@ const SeatSelection: React.FC = () => {
         <p>Fecha: {new Date(showDetails.startTime).toLocaleDateString()}</p>
         <p>Hora: {new Date(showDetails.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
       </div>
+      
+      {error && <Alert variant="danger" className="mb-4">{error}</Alert>}
       
       <Row>
         <Col lg={8}>
@@ -275,12 +265,29 @@ const SeatSelection: React.FC = () => {
                       const seat = seats.find(s => s.id === seatId);
                       return seat ? (
                         <li key={seatId} className="selected-seat-item">
-                          <div className="d-flex justify-content-between">
+                          <div className="d-flex justify-content-between mb-2">
                             <span>
                               Asiento {seat.row}{seat.number} ({seat.seatType})
                             </span>
                             <span>${getSeatPrice(seat)}</span>
                           </div>
+                          <Form.Group className="mb-3">
+                            <Form.Label>Tipo de Entrada</Form.Label>
+                            <Form.Select
+                              value={ticketTypes[seatId] || 'ADULT'}
+                              onChange={(e) => {
+                                setTicketTypes({
+                                  ...ticketTypes,
+                                  [seatId]: e.target.value
+                                });
+                              }}
+                            >
+                              <option value="ADULT">Adulto</option>
+                              <option value="CHILD">Niño</option>
+                              <option value="SENIOR">Jubilado</option>
+                              <option value="STUDENT">Estudiante</option>
+                            </Form.Select>
+                          </Form.Group>
                         </li>
                       ) : null;
                     })}
@@ -297,9 +304,9 @@ const SeatSelection: React.FC = () => {
                     variant="primary"
                     className="w-100"
                     onClick={handleContinue}
-                    disabled={processing}
+                    disabled={isLoading}
                   >
-                    {processing ? (
+                    {isLoading ? (
                       <>
                         <Spinner
                           as="span"
@@ -324,6 +331,15 @@ const SeatSelection: React.FC = () => {
               )}
             </Card.Body>
           </Card>
+
+          <Button
+            variant="outline-secondary"
+            className="w-100 mb-3"
+            onClick={() => navigate(-1)}
+          >
+            <i className="bi bi-arrow-left me-2"></i>
+            Volver a la película
+          </Button>
         </Col>
       </Row>
     </Container>

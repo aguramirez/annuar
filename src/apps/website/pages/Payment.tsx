@@ -9,6 +9,7 @@ import productService from '../../../common/services/productService';
 
 interface PaymentParams {
   reservationId: string;
+  [key: string]: string | undefined;
 }
 
 const Payment: React.FC = () => {

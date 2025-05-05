@@ -1,20 +1,21 @@
 // src/common/services/authService.ts
 import { apiRequest } from './apiClient';
 
-interface LoginRequest {
+export interface LoginRequest {
   email: string;
   password: string;
 }
 
-interface RegisterRequest {
+export interface RegisterRequest {
   email: string;
   password: string;
   firstName: string;
   lastName: string;
 }
 
-interface AuthResponse {
+export interface AuthResponse {
   token: string;
+  refreshToken: string; // Added this property
   user: {
     id: string;
     email: string;
@@ -24,12 +25,15 @@ interface AuthResponse {
   };
 }
 
-interface ApiResponse {
+export interface ApiResponse {
   success: boolean;
   message: string;
 }
 
 const authService = {
+  /**
+   * Log in a user with email and password
+   */
   login: async (credentials: LoginRequest): Promise<AuthResponse> => {
     return apiRequest<AuthResponse>({
       method: 'POST',
@@ -38,6 +42,9 @@ const authService = {
     });
   },
 
+  /**
+   * Register a new user
+   */
   register: async (userData: RegisterRequest): Promise<ApiResponse> => {
     return apiRequest<ApiResponse>({
       method: 'POST',
@@ -46,18 +53,57 @@ const authService = {
     });
   },
 
+  /**
+   * Refresh an authentication token
+   */
   refreshToken: async (refreshToken: string): Promise<AuthResponse> => {
     return apiRequest<AuthResponse>({
       method: 'POST',
       url: '/auth/refresh-token',
-      params: { refreshToken },
+      data: { refreshToken },
     });
   },
 
+  /**
+   * Log out the current user
+   */
   logout: async (): Promise<ApiResponse> => {
     return apiRequest<ApiResponse>({
       method: 'POST',
       url: '/auth/logout',
+    });
+  },
+
+  /**
+   * Social login integration 
+   */
+  socialLogin: async (provider: string, token: string): Promise<AuthResponse> => {
+    return apiRequest<AuthResponse>({
+      method: 'POST',
+      url: '/auth/social-login',
+      data: { provider, token },
+    });
+  },
+
+  /**
+   * Request a password reset
+   */
+  requestPasswordReset: async (email: string): Promise<ApiResponse> => {
+    return apiRequest<ApiResponse>({
+      method: 'POST',
+      url: '/auth/forgot-password',
+      data: { email },
+    });
+  },
+
+  /**
+   * Reset password with token
+   */
+  resetPassword: async (token: string, newPassword: string): Promise<ApiResponse> => {
+    return apiRequest<ApiResponse>({
+      method: 'POST',
+      url: '/auth/reset-password',
+      data: { token, newPassword },
     });
   }
 };

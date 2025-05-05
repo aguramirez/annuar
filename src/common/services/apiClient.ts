@@ -1,9 +1,18 @@
 // src/common/services/apiClient.ts
 import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse, AxiosError } from 'axios';
 import config from '../../config/config';
-import authService from './authService';
 
-// Crear instancia de axios
+// Update your config.ts to include REFRESH_TOKEN_KEY if not already done
+// const config = {
+//   API_URL: import.meta.env.NODE_ENV === 'production' 
+//     ? 'https://tu-dominio.com/api' 
+//     : 'http://localhost:8080/api',
+//   TOKEN_KEY: 'annuar-token',
+//   USER_KEY: 'annuar-user',
+//   REFRESH_TOKEN_KEY: 'annuar-refresh-token',
+// };
+
+// Create axios instance
 const apiClient: AxiosInstance = axios.create({
   baseURL: config.API_URL,
   headers: {
@@ -11,7 +20,7 @@ const apiClient: AxiosInstance = axios.create({
   },
 });
 
-// Almacenar las solicitudes que necesitan ser reintentadas después de renovar el token
+// Store requests that need to be retried after token refresh
 let isRefreshing = false;
 let failedQueue: any[] = [];
 
@@ -27,21 +36,21 @@ const processQueue = (error: any, token: string | null = null) => {
   failedQueue = [];
 };
 
-// Interceptor para agregar token de autenticación
+// Request interceptor to add authentication token
 apiClient.interceptors.request.use(
-  (config) => {
+  (configu) => {
     const token = localStorage.getItem(config.TOKEN_KEY);
     if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
+      configu.headers.Authorization = `Bearer ${token}`;
     }
-    return config;
+    return configu;
   },
   (error) => {
     return Promise.reject(error);
   }
 );
 
-// Interceptor para manejar respuestas
+// Response interceptor to handle token refresh
 apiClient.interceptors.response.use(
   (response) => {
     return response;
@@ -49,14 +58,14 @@ apiClient.interceptors.response.use(
   async (error: AxiosError) => {
     const originalRequest = error.config;
     
-    // Si el error es 401 (Unauthorized) y no es un intento de renovación
+    // If error is 401 (Unauthorized) and it's not a token refresh attempt
     if (error.response?.status === 401 && 
         originalRequest && 
         !(originalRequest as any)._retry && 
         originalRequest.url !== '/auth/refresh-token') {
       
       if (isRefreshing) {
-        // Si ya estamos renovando el token, agregamos la solicitud a la cola
+        // If already refreshing, add request to queue
         return new Promise((resolve, reject) => {
           failedQueue.push({ resolve, reject });
         })
@@ -69,15 +78,15 @@ apiClient.interceptors.response.use(
           });
       }
 
-      // Marcar que estamos renovando el token
+      // Mark that we're refreshing the token
       (originalRequest as any)._retry = true;
       isRefreshing = true;
 
-      // Obtener el refresh token del localStorage
+      // Get refresh token from localStorage
       const refreshToken = localStorage.getItem(config.REFRESH_TOKEN_KEY);
       
       if (!refreshToken) {
-        // Si no hay refresh token, redirigir al login
+        // If no refresh token, redirect to login
         localStorage.removeItem(config.TOKEN_KEY);
         localStorage.removeItem(config.USER_KEY);
         localStorage.removeItem(config.REFRESH_TOKEN_KEY);
@@ -86,30 +95,33 @@ apiClient.interceptors.response.use(
       }
       
       try {
-        // Intentar renovar el token
-        const response = await authService.refreshToken(refreshToken);
+        // Try to refresh the token
+        const response = await axios.post(`${config.API_URL}/auth/refresh-token`, { 
+          refreshToken 
+        });
         
-        // Si se renovó con éxito
-        localStorage.setItem(config.TOKEN_KEY, response.token);
+        // If successful
+        const newToken = response.data.token;
+        localStorage.setItem(config.TOKEN_KEY, newToken);
         
-        // Si el servicio devuelve un nuevo refresh token, actualizar
-        if (response.refreshToken) {
-          localStorage.setItem(config.REFRESH_TOKEN_KEY, response.refreshToken);
+        // If a new refresh token is returned, update it
+        if (response.data.refreshToken) {
+          localStorage.setItem(config.REFRESH_TOKEN_KEY, response.data.refreshToken);
         }
         
-        // Actualizar el token para todas las solicitudes en cola
-        processQueue(null, response.token);
+        // Update token for all queued requests
+        processQueue(null, newToken);
         
-        // Actualizar el token para la solicitud original
-        originalRequest.headers.Authorization = `Bearer ${response.token}`;
+        // Update token for original request
+        originalRequest.headers.Authorization = `Bearer ${newToken}`;
         
-        // Reintentar la solicitud original
+        // Retry original request
         return axios(originalRequest);
       } catch (refreshError) {
-        // Si la renovación falló, procesar la cola con error
+        // If refresh fails, process queue with error
         processQueue(refreshError, null);
         
-        // Limpiar almacenamiento local y redirigir al login
+        // Clear storage and redirect to login
         localStorage.removeItem(config.TOKEN_KEY);
         localStorage.removeItem(config.USER_KEY);
         localStorage.removeItem(config.REFRESH_TOKEN_KEY);
@@ -121,29 +133,29 @@ apiClient.interceptors.response.use(
       }
     }
     
-    // Para otros errores, simplemente rechazar la promesa
+    // For other errors, just reject the promise
     return Promise.reject(error);
   }
 );
 
-// Función genérica para peticiones HTTP
+// Generic function for HTTP requests
 export const apiRequest = async <T>(config: AxiosRequestConfig): Promise<T> => {
   try {
     const response: AxiosResponse<T> = await apiClient(config);
     return response.data;
   } catch (error: any) {
-    // Personalizar mensajes de error para una mejor experiencia de usuario
+    // Customize error messages for better user experience
     if (error.response) {
-      // El servidor respondió con un código de estado fuera del rango 2xx
-      const errorMsg = error.response.data?.message || 'Ha ocurrido un error en el servidor';
+      // Server responded with a status outside of 2xx range
+      const errorMsg = error.response.data?.message || 'Error en el servidor';
       console.error('API Error Response:', errorMsg);
       throw new Error(errorMsg);
     } else if (error.request) {
-      // La solicitud fue realizada pero no se recibió respuesta
+      // The request was made but no response was received
       console.error('API No Response:', error.request);
       throw new Error('No se recibió respuesta del servidor. Verifica tu conexión a internet.');
     } else {
-      // Ocurrió un error al configurar la solicitud
+      // Something happened in setting up the request
       console.error('API Request Error:', error.message);
       throw new Error('Error al realizar la solicitud: ' + error.message);
     }
