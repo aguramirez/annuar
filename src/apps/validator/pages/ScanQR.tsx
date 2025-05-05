@@ -1,6 +1,8 @@
 // src/apps/validator/pages/ScanQR.tsx
 import React, { useState, useEffect } from 'react';
-import { Container, Card, Button, Alert } from 'react-bootstrap';
+import { Container, Card, Button, Alert, Spinner } from 'react-bootstrap';
+import qrCodeService from '../../../common/services/qrCodeService';
+import showService from '../../../common/services/showService';
 
 enum ValidationStatus {
   IDLE = 'idle',
@@ -10,77 +12,99 @@ enum ValidationStatus {
   ERROR = 'error'
 }
 
-interface ValidationResult {
-  status: ValidationStatus;
-  message: string;
-  ticketData?: {
-    orderId: string;
-    movieTitle: string;
-    showtime: string;
-    seat: string;
-    customerName: string;
-  };
+interface Show {
+  id: string;
+  movieTitle: string;
+  roomName: string;
+  startTime: string;
 }
 
 const ScanQR: React.FC = () => {
   const [validationStatus, setValidationStatus] = useState<ValidationStatus>(ValidationStatus.IDLE);
-  const [validationResult, setValidationResult] = useState<ValidationResult | null>(null);
-  const [isCameraActive, setIsCameraActive] = useState(false);
+  const [validationMessage, setValidationMessage] = useState<string>('');
+  const [ticketData, setTicketData] = useState<any>(null);
+  const [qrContent, setQrContent] = useState<string>('');
+  const [activeShow, setActiveShow] = useState<string>('');
+  const [availableShows, setAvailableShows] = useState<Show[]>([]);
+  const [loading, setLoading] = useState(false);
+  
+  // Cargar funciones en curso al iniciar
+  useEffect(() => {
+    const fetchCurrentShows = async () => {
+      try {
+        setLoading(true);
+        const shows = await showService.getCurrentlyPlayingShows();
+        setAvailableShows(shows);
+        
+        if (shows.length > 0) {
+          setActiveShow(shows[0].id);
+        }
+      } catch (error) {
+        console.error('Error al cargar funciones actuales:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchCurrentShows();
+  }, []);
   
   // Simulación de escaneo de QR
   const startScanning = () => {
     setValidationStatus(ValidationStatus.SCANNING);
-    setIsCameraActive(true);
     
-    // Simular un escaneo después de 2 segundos
-    setTimeout(() => {
-      simulateQRScan();
-    }, 2000);
+    // Aquí iría la lógica para acceder a la cámara y escanear el QR
+    // Por ahora simplemente simulamos un input
+    const mockQrCode = prompt('Ingresa el contenido del QR (simulación):');
+    
+    if (mockQrCode) {
+      setQrContent(mockQrCode);
+      validateQR(mockQrCode);
+    } else {
+      setValidationStatus(ValidationStatus.IDLE);
+    }
   };
   
-  // Función para simular un resultado de escaneo (aleatorio)
-  const simulateQRScan = () => {
-    const randomResult = Math.random();
-    
-    if (randomResult > 0.7) {
-      // Simular QR válido
-      setValidationStatus(ValidationStatus.VALID);
-      setValidationResult({
-        status: ValidationStatus.VALID,
-        message: 'Entrada válida',
-        ticketData: {
-          orderId: 'ORD-' + Math.floor(10000 + Math.random() * 90000),
-          movieTitle: 'Capitan America: Un Nuevo Mundo',
-          showtime: '04/05/2025 18:15',
+  // Validar QR con el backend
+  const validateQR = async (qrContent: string) => {
+    try {
+      setLoading(true);
+      const result = await qrCodeService.validateQrCode(qrContent);
+      
+      if (result.success) {
+        setValidationStatus(ValidationStatus.VALID);
+        setValidationMessage(result.message || 'Entrada válida');
+        
+        // Simular datos de ticket - en una implementación real vendría de la API
+        setTicketData({
+          orderId: 'ORD-123456',
+          movieTitle: availableShows.find(s => s.id === activeShow)?.movieTitle || 'Película',
+          showtime: availableShows.find(s => s.id === activeShow)?.startTime || new Date().toISOString(),
           seat: 'F12',
           customerName: 'Juan Pérez'
-        }
-      });
-    } else if (randomResult > 0.4) {
-      // Simular QR inválido
-      setValidationStatus(ValidationStatus.INVALID);
-      setValidationResult({
-        status: ValidationStatus.INVALID,
-        message: 'Esta entrada ya ha sido utilizada'
-      });
-    } else {
-      // Simular error
+        });
+      } else {
+        setValidationStatus(ValidationStatus.INVALID);
+        setValidationMessage(result.message || 'Entrada inválida');
+        setTicketData(null);
+      }
+    } catch (error) {
+      console.error('Error validando QR:', error);
       setValidationStatus(ValidationStatus.ERROR);
-      setValidationResult({
-        status: ValidationStatus.ERROR,
-        message: 'QR no reconocido o formato inválido'
-      });
+      setValidationMessage('Error de conexión al validar el QR');
+      setTicketData(null);
+    } finally {
+      setLoading(false);
     }
-    
-    setIsCameraActive(false);
   };
   
   const resetScanner = () => {
     setValidationStatus(ValidationStatus.IDLE);
-    setValidationResult(null);
+    setValidationMessage('');
+    setQrContent('');
+    setTicketData(null);
   };
   
-  // src/apps/validator/pages/ScanQR.tsx (continuación)
   // Clase y color según el estado de validación
   const getStatusClass = () => {
     switch (validationStatus) {
@@ -93,13 +117,45 @@ const ScanQR: React.FC = () => {
         return '';
     }
   };
-
+  
   return (
-    <Container className="py-4 validation-container">
+    <Container className="py-4">
       <h1 className="text-center mb-4">Validador de Entradas</h1>
       
+      {/* Selector de función */}
+      <Card className="mb-4">
+        <Card.Body>
+          <h5 className="mb-3">Función Activa</h5>
+          {loading ? (
+            <div className="text-center py-3">
+              <Spinner animation="border" role="status">
+                <span className="visually-hidden">Cargando...</span>
+              </Spinner>
+            </div>
+          ) : availableShows.length > 0 ? (
+            <select 
+              className="form-select" 
+              value={activeShow}
+              onChange={(e) => setActiveShow(e.target.value)}
+              disabled={validationStatus !== ValidationStatus.IDLE}
+            >
+              {availableShows.map(show => (
+                <option key={show.id} value={show.id}>
+                  {show.movieTitle} - {show.roomName} - {new Date(show.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                </option>
+              ))}
+            </select>
+          ) : (
+            <Alert variant="warning">
+              No hay funciones en curso en este momento.
+            </Alert>
+          )}
+        </Card.Body>
+      </Card>
+      
+      {/* Escáner de QR */}
       <Card className={`validation-card ${getStatusClass()}`}>
-        <Card.Body className="text-center">
+        <Card.Body className="text-center p-5">
           {validationStatus === ValidationStatus.IDLE && (
             <>
               <div className="scanner-icon-container mb-4">
@@ -112,6 +168,7 @@ const ScanQR: React.FC = () => {
                 size="lg" 
                 className="scan-btn px-5"
                 onClick={startScanning}
+                disabled={!activeShow || loading}
               >
                 <i className="bi bi-camera me-2"></i>
                 Iniciar Escaneo
@@ -133,6 +190,7 @@ const ScanQR: React.FC = () => {
               <Button 
                 variant="secondary" 
                 onClick={resetScanner}
+                disabled={loading}
               >
                 Cancelar
               </Button>
@@ -141,7 +199,7 @@ const ScanQR: React.FC = () => {
 
           {(validationStatus === ValidationStatus.VALID || 
             validationStatus === ValidationStatus.INVALID || 
-            validationStatus === ValidationStatus.ERROR) && validationResult && (
+            validationStatus === ValidationStatus.ERROR) && (
             <>
               <div className={`result-icon mb-4 ${
                 validationStatus === ValidationStatus.VALID ? 'valid-icon' : 'invalid-icon'
@@ -153,25 +211,33 @@ const ScanQR: React.FC = () => {
                 }`}></i>
               </div>
               
-              <h2 className="mb-3">{validationResult.message}</h2>
+              <h2 className="mb-3">{validationMessage}</h2>
               
-              {validationStatus === ValidationStatus.VALID && validationResult.ticketData && (
+              {validationStatus === ValidationStatus.VALID && ticketData && (
                 <div className="ticket-details text-start mb-4">
                   <div className="detail-item">
                     <span className="detail-label">Película:</span>
-                    <span className="detail-value">{validationResult.ticketData.movieTitle}</span>
+                    <span className="detail-value">{ticketData.movieTitle}</span>
                   </div>
                   <div className="detail-item">
                     <span className="detail-label">Función:</span>
-                    <span className="detail-value">{validationResult.ticketData.showtime}</span>
+                    <span className="detail-value">
+                      {new Date(ticketData.showtime).toLocaleString([], { 
+                        hour: '2-digit', 
+                        minute: '2-digit',
+                        day: '2-digit',
+                        month: '2-digit',
+                        year: 'numeric'
+                      })}
+                    </span>
                   </div>
                   <div className="detail-item">
                     <span className="detail-label">Asiento:</span>
-                    <span className="detail-value">{validationResult.ticketData.seat}</span>
+                    <span className="detail-value">{ticketData.seat}</span>
                   </div>
                   <div className="detail-item">
                     <span className="detail-label">Cliente:</span>
-                    <span className="detail-value">{validationResult.ticketData.customerName}</span>
+                    <span className="detail-value">{ticketData.customerName}</span>
                   </div>
                 </div>
               )}
@@ -182,6 +248,7 @@ const ScanQR: React.FC = () => {
                   size="lg" 
                   className="me-3"
                   onClick={resetScanner}
+                  disabled={loading}
                 >
                   Escanear Otro
                 </Button>
@@ -190,6 +257,7 @@ const ScanQR: React.FC = () => {
                   <Button 
                     variant="success" 
                     size="lg"
+                    disabled={loading}
                   >
                     Permitir Acceso
                   </Button>
@@ -197,30 +265,37 @@ const ScanQR: React.FC = () => {
               </div>
             </>
           )}
+          
+          {loading && (
+            <div className="position-absolute top-50 start-50 translate-middle">
+              <Spinner animation="border" role="status">
+                <span className="visually-hidden">Cargando...</span>
+              </Spinner>
+            </div>
+          )}
         </Card.Body>
       </Card>
       
-      <div className="validation-stats mt-4">
-        <Card>
-          <Card.Body>
-            <h5 className="mb-3">Estadísticas de Validación</h5>
-            <div className="d-flex justify-content-around text-center">
-              <div className="stat-item">
-                <div className="stat-value">42</div>
-                <div className="stat-label">Validadas</div>
-              </div>
-              <div className="stat-item">
-                <div className="stat-value">3</div>
-                <div className="stat-label">Rechazadas</div>
-              </div>
-              <div className="stat-item">
-                <div className="stat-value">63%</div>
-                <div className="stat-label">Ocupación</div>
-              </div>
+      {/* Estadísticas */}
+      <Card className="mt-4">
+        <Card.Body>
+          <h5 className="mb-3">Estadísticas de Validación</h5>
+          <div className="d-flex justify-content-around text-center">
+            <div className="stat-item">
+              <div className="stat-value">42</div>
+              <div className="stat-label">Validadas</div>
             </div>
-          </Card.Body>
-        </Card>
-      </div>
+            <div className="stat-item">
+              <div className="stat-value">3</div>
+              <div className="stat-label">Rechazadas</div>
+            </div>
+            <div className="stat-item">
+              <div className="stat-value">63%</div>
+              <div className="stat-label">Ocupación</div>
+            </div>
+          </div>
+        </Card.Body>
+      </Card>
     </Container>
   );
 };

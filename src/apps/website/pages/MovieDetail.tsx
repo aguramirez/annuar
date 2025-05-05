@@ -1,293 +1,214 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Container, Row, Col, Button, Badge, Card } from 'react-bootstrap';
-import Navbar from '../../../components/shared/Navbar';
+// src/apps/website/pages/MovieDetail.tsx
+import React, { useEffect, useState } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { Container, Row, Col, Card, Button, Badge, Spinner, Tab, Tabs } from 'react-bootstrap';
+import movieService, { Movie } from '../../../common/services/movieService';
+import showService, { Show } from '../../../common/services/showService';
 
-interface Movie {
-  id: number;
-  title: string;
-  director: string;
-  genre: string[];
-  duration: number;
-  releaseDate: string;
-  poster: string;
-  synopsis: string;
-  trailerUrl: string;
-  rating: number;
-  showtimes: {
-    date: string;
-    times: string[];
-  }[];
+interface MovieDetailParams {
+  id: string;
 }
 
-interface MovieDetailProps {
-  movie: Movie | null;
-  setSelectedShowtime: (showtime: { date: string; time: string }) => void;
-  setTicketCount: (count: number) => void;
-}
-
-const MovieDetail: React.FC<MovieDetailProps> = ({
-  movie,
-  setSelectedShowtime,
-  setTicketCount
-}) => {
+const MovieDetail: React.FC = () => {
+  const { id } = useParams<MovieDetailParams>();
   const navigate = useNavigate();
-  const [selectedDate, setSelectedDate] = useState<string>('');
-  const [selectedTime, setSelectedTime] = useState<string>('');
-  const [tickets, setTickets] = useState<number>(1);
-  const [isLoaded, setIsLoaded] = useState(false);
   
-  // Referencias para scroll automático
-  const timesContainerRef = useRef<HTMLDivElement>(null);
-  const ticketsContainerRef = useRef<HTMLDivElement>(null);
+  const [movie, setMovie] = useState<Movie | null>(null);
+  const [shows, setShows] = useState<Show[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [selectedDate, setSelectedDate] = useState<string>('');
 
-  // Scroll to top when component mounts
   useEffect(() => {
-    window.scrollTo(0, 0);
+    const fetchMovieAndShows = async () => {
+      if (!id) return;
+      
+      try {
+        setLoading(true);
+        // Obtener detalles de la película
+        const movieData = await movieService.getMovie(id);
+        setMovie(movieData);
+        
+        // Obtener funciones para esta película
+        const showsData = await showService.getShowsForMovie(id);
+        setShows(showsData);
+        
+        // Establecer la primera fecha disponible como seleccionada
+        if (showsData.length > 0) {
+          const dates = [...new Set(showsData.map(show => 
+            new Date(show.startTime).toISOString().split('T')[0]
+          ))];
+          if (dates.length > 0) {
+            setSelectedDate(dates[0]);
+          }
+        }
+        
+        setError(null);
+      } catch (err) {
+        console.error('Error fetching movie and shows:', err);
+        setError('No se pudieron cargar los datos. Por favor, intenta de nuevo más tarde.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchMovieAndShows();
+  }, [id]);
+
+  const handleSelectShow = (showId: string) => {
+    navigate(`/seats/${showId}`);
+  };
+
+  // Agrupar funciones por fecha
+  const groupShowsByDate = () => {
+    const grouped: Record<string, Show[]> = {};
     
-    // Animation trigger after component mounts
-    setTimeout(() => {
-      setIsLoaded(true);
-    }, 100);
-  }, []);
+    shows.forEach(show => {
+      const date = new Date(show.startTime).toISOString().split('T')[0];
+      if (!grouped[date]) {
+        grouped[date] = [];
+      }
+      grouped[date].push(show);
+    });
+    
+    return grouped;
+  };
 
-  // Scroll automático cuando se selecciona una fecha
-  useEffect(() => {
-    if (selectedDate && timesContainerRef.current) {
-      setTimeout(() => {
-        timesContainerRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      }, 300);
-    }
-  }, [selectedDate]);
-
-  // Scroll automático cuando se selecciona un horario
-  useEffect(() => {
-    if (selectedTime && ticketsContainerRef.current) {
-      setTimeout(() => {
-        ticketsContainerRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      }, 300);
-    }
-  }, [selectedTime]);
-
-  if (!movie) {
-    return (
-      <Container className="text-center py-5">
-        <div className="spinner-border text-primary" role="status">
-          <span className="visually-hidden">Cargando...</span>
-        </div>
-        <p className="mt-3">Cargando detalles de la película...</p>
-      </Container>
-    );
-  }
-
+  // Formatear fecha para mostrar
   const formatDate = (dateString: string) => {
-    const options: Intl.DateTimeFormatOptions = {
-      weekday: 'long',
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
+    const options: Intl.DateTimeFormatOptions = { 
+      weekday: 'long', 
+      year: 'numeric', 
+      month: 'long', 
+      day: 'numeric' 
     };
     return new Date(dateString).toLocaleDateString('es-ES', options);
   };
 
-  const handleContinue = () => {
-    if (selectedDate && selectedTime) {
-      setSelectedShowtime({ date: selectedDate, time: selectedTime });
-      setTicketCount(tickets);
-      navigate('/seats');
-    }
+  // Formatear hora para mostrar
+  const formatTime = (dateTimeString: string) => {
+    return new Date(dateTimeString).toLocaleTimeString('es-ES', { 
+      hour: '2-digit', 
+      minute: '2-digit' 
+    });
   };
 
-  const handleBack = () => {
-    navigate('/');
-  };
+  if (loading) {
+    return (
+      <Container className="py-5 text-center">
+        <Spinner animation="border" role="status">
+          <span className="visually-hidden">Cargando...</span>
+        </Spinner>
+      </Container>
+    );
+  }
 
-  // Obten el día de la semana abreviado
-  const getDayOfWeek = (dateString: string) => {
-    const days = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
-    return days[new Date(dateString).getDay()];
-  };
+  if (error) {
+    return (
+      <Container className="py-5">
+        <div className="alert alert-danger">{error}</div>
+      </Container>
+    );
+  }
 
-  // Obten el día del mes
-  const getDayOfMonth = (dateString: string) => {
-    return new Date(dateString).getDate();
-  };
+  if (!movie) {
+    return (
+      <Container className="py-5">
+        <div className="alert alert-warning">No se encontró la película solicitada.</div>
+      </Container>
+    );
+  }
 
-  // Obten el mes abreviado
-  const getMonth = (dateString: string) => {
-    const months = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
-    return months[new Date(dateString).getMonth()];
-  };
+  const groupedShows = groupShowsByDate();
+  const availableDates = Object.keys(groupedShows).sort();
 
   return (
-    <div className="fade-in movie-detail-page">
-      <Navbar showBackButton onBack={handleBack} />
-
-      <Container className="movie-detail-container">
-        <Row className={isLoaded ? "slide-up" : ""}>
-          <Col md={4} className="mb-4">
-            <div className="position-relative poster-container">
-              <img
-                src={movie.poster}
-                alt={movie.title}
-                className="movie-poster mb-3"
-              />
-              <div className="movie-rating-badge">
-                <i className="bi bi-star-fill me-1"></i>
-                {movie.rating.toFixed(1)}
-              </div>
+    <Container className="py-5">
+      <Row>
+        <Col md={4} className="mb-4">
+          <img 
+            src={movie.posterUrl || 'https://via.placeholder.com/300x450'} 
+            alt={movie.title} 
+            className="img-fluid rounded"
+          />
+        </Col>
+        <Col md={8}>
+          <h1 className="mb-3">{movie.title}</h1>
+          <div className="mb-3">
+            <Badge bg="primary" className="me-2">{movie.rating}</Badge>
+            <Badge bg="secondary" className="me-2">{movie.genre}</Badge>
+            <span>{movie.durationMinutes} minutos</span>
+          </div>
+          <p className="lead mb-4">{movie.synopsis}</p>
+          <div className="movie-details mb-4">
+            <p><strong>Director:</strong> {movie.director}</p>
+            <p><strong>Reparto:</strong> {movie.cast}</p>
+            <p><strong>Estreno:</strong> {new Date(movie.releaseDate).toLocaleDateString()}</p>
+            <p>
+              <strong>Idioma:</strong> {movie.language}
+              {movie.is3d && <Badge bg="info" className="ms-2">3D</Badge>}
+              {movie.isSubtitled && <Badge bg="dark" className="ms-2">Subtitulada</Badge>}
+            </p>
+          </div>
+          
+          {movie.trailerUrl && (
+            <div className="mb-4">
+              <a href={movie.trailerUrl} target="_blank" rel="noopener noreferrer" className="btn btn-outline-primary">
+                <i className="bi bi-play-circle me-2"></i>
+                Ver Trailer
+              </a>
             </div>
-            <div className="movie-info-card p-3 mb-3">
-              <div className="d-flex justify-content-between align-items-center mb-3">
-                <div>
-                  <h6 className="mb-1">Duración</h6>
-                  <div className="fw-bold">
-                    <i className="bi bi-clock me-1 text-primary"></i>
-                    {movie.duration} min
-                  </div>
-                </div>
-                <div className="border-start ps-3">
-                  <h6 className="mb-1">Estreno</h6>
-                  <div className="fw-bold">
-                    <i className="bi bi-calendar-event me-1 text-primary"></i>
-                    {new Date(movie.releaseDate).toLocaleDateString('es-ES')}
-                  </div>
-                </div>
-              </div>
-              <h6 className="mb-1">Director</h6>
-              <div className="fw-bold mb-3">
-                <i className="bi bi-camera-reels me-1 text-primary"></i>
-                {movie.director}
-              </div>
-              <h6 className="mb-1">Géneros</h6>
-              <div>
-                {movie.genre.map((genre, index) => (
-                  <Badge
-                    key={index}
-                    bg="primary"
-                    className="me-1 mb-1 genre-badge"
+          )}
+        </Col>
+      </Row>
+      
+      <hr className="my-4" />
+      
+      <h2 className="mb-4">Funciones Disponibles</h2>
+      
+      {availableDates.length > 0 ? (
+        <>
+          <div className="date-selector mb-4">
+            <Tabs
+              activeKey={selectedDate}
+              onSelect={(date) => setSelectedDate(date || '')}
+              className="mb-3"
+            >
+              {availableDates.map(date => (
+                <Tab 
+                  key={date} 
+                  eventKey={date} 
+                  title={formatDate(date)}
+                />
+              ))}
+            </Tabs>
+          </div>
+          
+          <Card>
+            <Card.Body>
+              <h5 className="mb-3">Horarios para {formatDate(selectedDate)}</h5>
+              <div className="d-flex flex-wrap">
+                {selectedDate && groupedShows[selectedDate]?.map(show => (
+                  <Button
+                    key={show.id}
+                    variant="outline-primary"
+                    className="me-2 mb-2"
+                    onClick={() => handleSelectShow(show.id)}
                   >
-                    {genre}
-                  </Badge>
+                    {formatTime(show.startTime)}
+                    {show.is3d && <span className="ms-1">3D</span>}
+                  </Button>
                 ))}
               </div>
-            </div>
-          </Col>
-          <Col md={8}>
-            <h1 className="movie-title mb-3">{movie.title}</h1>
-            <div className="movie-synopsis mb-4">
-              <h5 className="mb-2">Sinopsis</h5>
-              <p className="lead">{movie.synopsis}</p>
-            </div>
-
-            <Card className="mb-4 trailer-card">
-              <Card.Header as="h5">
-                <i className="bi bi-film me-2 text-primary"></i>Trailer
-              </Card.Header>
-              <Card.Body>
-                <div className="trailer-container">
-                  <iframe
-                    src={movie.trailerUrl}
-                    title={`${movie.title} Trailer`}
-                    allowFullScreen
-                    frameBorder="0"
-                  ></iframe>
-                </div>
-              </Card.Body>
-            </Card>
-
-            <Card className="showtimes-card">
-              <Card.Header as="h5">
-                <i className="bi bi-calendar-event me-2 text-primary"></i>Funciones Disponibles
-              </Card.Header>
-              <Card.Body>
-                <h6 className="mb-3">Selecciona una fecha:</h6>
-                <div className="dates-container mb-4">
-                  {movie.showtimes.map((showtime, index) => (
-                    <div
-                      key={index}
-                      className={`date-card ${selectedDate === showtime.date ? 'date-selected' : ''}`}
-                      onClick={() => {
-                        setSelectedDate(showtime.date);
-                        setSelectedTime(''); // Reset selected time when date changes
-                      }}
-                    >
-                      <div className="date-weekday">{getDayOfWeek(showtime.date)}</div>
-                      <div className="date-number">{getDayOfMonth(showtime.date)}</div>
-                      <div className="date-month">{getMonth(showtime.date)}</div>
-                    </div>
-                  ))}
-                </div>
-
-                {selectedDate && (
-                  <div ref={timesContainerRef} className="mb-4 times-section fade-in">
-                    <h6 className="mb-3">Selecciona un horario:</h6>
-                    <div className="times-container">
-                      {movie.showtimes.find(s => s.date === selectedDate)?.times.map((time, index) => (
-                        <div
-                          key={index}
-                          className={`time-card ${selectedTime === time ? 'time-selected' : ''}`}
-                          onClick={() => setSelectedTime(time)}
-                        >
-                          <i className="bi bi-clock me-2"></i>
-                          {time}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {selectedDate && selectedTime && (
-                  <div ref={ticketsContainerRef} className="tickets-section p-3 mt-4 fade-in">
-                    <h6 className="mb-3">Número de entradas:</h6>
-                    <div className="ticket-selector d-flex align-items-center justify-content-between mb-4">
-                      <Button
-                        variant="outline-primary"
-                        className="ticket-btn"
-                        onClick={() => setTickets(prev => Math.max(prev - 1, 1))}
-                        disabled={tickets <= 1}
-                      >
-                        <i className="bi bi-dash-lg"></i>
-                      </Button>
-                      <div className="ticket-count">{tickets}</div>
-                      <Button
-                        variant="outline-primary"
-                        className="ticket-btn"
-                        onClick={() => setTickets(prev => Math.min(prev + 1, 10))}
-                        disabled={tickets >= 10}
-                      >
-                        <i className="bi bi-plus-lg"></i>
-                      </Button>
-                    </div>
-
-                    <div className="ticket-summary mb-3">
-                      <div className="d-flex justify-content-between mb-2">
-                        <span>Entradas:</span>
-                        <span>{tickets} x $800</span>
-                      </div>
-                      <div className="d-flex justify-content-between fw-bold">
-                        <span>Total:</span>
-                        <span>${tickets * 800}</span>
-                      </div>
-                    </div>
-
-                    <Button
-                      variant="primary"
-                      size="lg"
-                      onClick={handleContinue}
-                      className="w-100 continue-btn"
-                    >
-                      <i className="bi bi-arrow-right-circle me-2"></i>
-                      Continuar con la selección de asientos
-                    </Button>
-                  </div>
-                )}
-              </Card.Body>
-            </Card>
-          </Col>
-        </Row>
-      </Container>
-    </div>
+            </Card.Body>
+          </Card>
+        </>
+      ) : (
+        <div className="alert alert-info">
+          No hay funciones disponibles para esta película en este momento.
+        </div>
+      )}
+    </Container>
   );
 };
 

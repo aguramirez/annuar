@@ -1,22 +1,22 @@
 // src/auth/ProtectedRoute.tsx
 import React from 'react';
-import { Navigate } from 'react-router-dom';
-import useAuth from './useAuth';
-import { UserRole } from './AuthProvider';
+import { Navigate, useLocation } from 'react-router-dom';
+import { useAuth } from './AuthContext';
 
 interface ProtectedRouteProps {
-  children: React.ReactElement;
-  requiredRole?: UserRole | UserRole[];
+  children: React.ReactNode;
+  requiredRole?: string | string[];
 }
 
 const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ 
   children, 
-  requiredRole 
+  requiredRole
 }) => {
   const { user, isAuthenticated, isLoading } = useAuth();
+  const location = useLocation();
   
   if (isLoading) {
-    // Muestra un spinner o pantalla de carga
+    // Mostrar spinner de carga
     return (
       <div className="d-flex justify-content-center align-items-center" style={{ height: '100vh' }}>
         <div className="spinner-border text-primary" role="status">
@@ -26,24 +26,29 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
     );
   }
   
-  // Si no está autenticado, redirige al login
+  // Si no está autenticado, redirigir a login
   if (!isAuthenticated) {
-    return <Navigate to="/login" />;
+    return <Navigate to="/login" state={{ from: location }} replace />;
   }
   
-  // Si se requiere un rol específico
+  // Si se requiere un rol específico y el usuario no lo tiene
   if (requiredRole && user) {
-    const requiredRoles = Array.isArray(requiredRole) ? requiredRole : [requiredRole];
+    const roles = Array.isArray(requiredRole) ? requiredRole : [requiredRole];
     
-    // Verificar si el usuario tiene alguno de los roles requeridos
-    if (!requiredRoles.includes(user.role)) {
-      // Si no tiene el rol adecuado, redirige a una página de acceso denegado o al home
-      return <Navigate to="/" />;
+    if (!roles.includes(user.role)) {
+      // Redirigir a una página de acceso denegado o al home según el rol
+      if (user.role === 'ADMIN') {
+        return <Navigate to="/admin" replace />;
+      } else if (user.role === 'STAFF') {
+        return <Navigate to="/pos" replace />;
+      } else {
+        return <Navigate to="/" replace />;
+      }
     }
   }
   
-  // Si está autenticado y tiene el rol adecuado, renderiza el componente hijo
-  return children;
+  // Si está autenticado y tiene el rol adecuado, renderizar los children
+  return <>{children}</>;
 };
 
 export default ProtectedRoute;

@@ -1,6 +1,6 @@
 // src/AppRoutes.tsx
-import React, { useState } from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import React from 'react';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
 
 // Layouts
 import AdminLayout from './common/components/layouts/AdminLayout';
@@ -8,7 +8,7 @@ import POSLayout from './common/components/layouts/POSLayout';
 import ValidatorLayout from './common/components/layouts/ValidatorLayout';
 import WebsiteLayout from './common/components/layouts/WebsiteLayout';
 
-// Website Routes (Public)
+// Website Routes
 import Home from './apps/website/pages/Home';
 import MovieDetail from './apps/website/pages/MovieDetail';
 import SeatSelection from './apps/website/pages/SeatSelection';
@@ -33,76 +33,33 @@ import POSCheckout from './apps/pos/pages/POSCheckout';
 import ScanQR from './apps/validator/pages/ScanQR';
 import ValidatorSettings from './apps/validator/pages/ValidatorSettings';
 
-// Auth components
-import { AuthProvider } from './auth/AuthProvider';
+// Auth
+import { AuthProvider } from './auth/AuthContext';
 import ProtectedRoute from './auth/ProtectedRoute';
 
 const AppRoutes: React.FC = () => {
-  // State for shared data between routes
-  const [selectedMovie, setSelectedMovie] = useState<any>(null);
-  const [selectedShowtime, setSelectedShowtime] = useState<{ date: string; time: string }>({
-    date: "",
-    time: ""
-  });
-  const [ticketCount, setTicketCount] = useState<number>(1);
-  const [selectedSeats, setSelectedSeats] = useState<string[]>([]);
-  const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
-
-  // Mock movies data for initial render
-  const [movies, setMovies] = useState<any[]>([
-    {
-      id: 1,
-      title: "Example Movie",
-      director: "Director Name",
-      genre: ["Action", "Adventure"],
-      duration: 120,
-      releaseDate: "2025-01-01",
-      poster: "https://via.placeholder.com/300x450",
-      heroImage: "https://via.placeholder.com/1920x1080",
-      synopsis: "Example movie synopsis.",
-      trailerUrl: "https://www.youtube.com/embed/example",
-      rating: 4.5,
-      showtimes: [
-        {
-          date: "2025-05-10",
-          times: ["14:30", "18:00", "21:15"]
-        }
-      ]
-    }
-  ]);
   return (
     <BrowserRouter>
       <AuthProvider>
         <Routes>
           {/* Website Routes */}
           <Route path="/" element={<WebsiteLayout />}>
-            <Route index element={<Home movies={movies} setSelectedMovie={setSelectedMovie} />} />
-            <Route path="movie/:id" element={<MovieDetail
-              movie={selectedMovie}
-              setSelectedShowtime={setSelectedShowtime}
-              setTicketCount={setTicketCount}
-            />} />
-            <Route path="seats" element={<SeatSelection
-              movie={selectedMovie}
-              showtime={selectedShowtime}
-              ticketCount={ticketCount}
-              selectedSeats={selectedSeats}
-              setSelectedSeats={setSelectedSeats}
-            />} />
-            <Route path="login" element={<Login setIsLoggedIn={setIsLoggedIn} />} />
-            <Route path="payment" element={<Payment
-              movie={selectedMovie}
-              showtime={selectedShowtime}
-              ticketCount={ticketCount}
-              selectedSeats={selectedSeats}
-            />} />
+            <Route index element={<Home />} />
+            <Route path="movie/:id" element={<MovieDetail />} />
+            <Route path="seats/:showId" element={<SeatSelection />} />
+            <Route path="login" element={<Login />} />
+            <Route path="payment/:reservationId" element={
+              <ProtectedRoute>
+                <Payment />
+              </ProtectedRoute>
+            } />
           </Route>
 
           {/* Admin Routes */}
           <Route
             path="/admin"
             element={
-              <ProtectedRoute requiredRole="admin">
+              <ProtectedRoute requiredRole="ADMIN">
                 <AdminLayout />
               </ProtectedRoute>
             }
@@ -119,7 +76,7 @@ const AppRoutes: React.FC = () => {
           <Route
             path="/pos"
             element={
-              <ProtectedRoute requiredRole="staff">
+              <ProtectedRoute requiredRole={["ADMIN", "STAFF"]}>
                 <POSLayout />
               </ProtectedRoute>
             }
@@ -134,7 +91,7 @@ const AppRoutes: React.FC = () => {
           <Route
             path="/validator"
             element={
-              <ProtectedRoute requiredRole="staff">
+              <ProtectedRoute requiredRole={["ADMIN", "STAFF"]}>
                 <ValidatorLayout />
               </ProtectedRoute>
             }
@@ -142,9 +99,6 @@ const AppRoutes: React.FC = () => {
             <Route index element={<ScanQR />} />
             <Route path="settings" element={<ValidatorSettings />} />
           </Route>
-
-          {/* Redirect 404 to home */}
-          <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </AuthProvider>
     </BrowserRouter>

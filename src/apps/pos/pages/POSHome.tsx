@@ -1,160 +1,194 @@
 // src/apps/pos/pages/POSHome.tsx
-import React, { useState, useEffect } from 'react';
-import { Container, Row, Col, Card, Button } from 'react-bootstrap';
-
-interface Movie {
-  id: number;
-  title: string;
-  poster: string;
-  showtimes: {
-    id: number;
-    date: string;
-    time: string;
-  }[];
-}
+import React, { useEffect, useState } from 'react';
+import { Container, Row, Col, Card, Button, Tab, Tabs, Alert } from 'react-bootstrap';
+import { useNavigate } from 'react-router-dom';
+import showService, { Show } from '../../../common/services/showService';
+import movieService, { Movie } from '../../../common/services/movieService';
 
 const POSHome: React.FC = () => {
+  const navigate = useNavigate();
+  
   const [movies, setMovies] = useState<Movie[]>([]);
+  const [shows, setShows] = useState<Show[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [selectedDate, setSelectedDate] = useState<string>(new Date().toISOString().split('T')[0]);
-
+  
+  const cinemaId = 'your-cinema-id'; // Esto debería venir de la configuración o contexto
+  
   useEffect(() => {
-    // En un caso real, esto sería una llamada a la API
-    const fetchMovies = async () => {
-      // Datos de ejemplo
-      const moviesData = [
-        {
-          id: 1,
-          title: 'Minecraft',
-          poster: 'https://i.pinimg.com/736x/36/96/05/369605adcd515e808b8d950bb1997b8c.jpg',
-          showtimes: [
-            { id: 101, date: '2025-05-04', time: '14:30' },
-            { id: 102, date: '2025-05-04', time: '17:45' },
-            { id: 103, date: '2025-05-04', time: '20:15' },
-            { id: 104, date: '2025-05-05', time: '15:00' },
-          ]
-        },
-        {
-          id: 2,
-          title: 'Capitan America: Un Nuevo Mundo',
-          poster: 'https://m.media-amazon.com/images/M/MV5BNDRjY2E0ZmEtN2QwNi00NTEwLWI3MWItODNkMGYwYWFjNGE0XkEyXkFqcGc@._V1_FMjpg_UX1000_.jpg',
-          showtimes: [
-            { id: 201, date: '2025-05-04', time: '15:30' },
-            { id: 202, date: '2025-05-04', time: '18:15' },
-            { id: 203, date: '2025-05-05', time: '14:00' },
-          ]
-        },
-        {
-          id: 3,
-          title: 'Blanca Nieves',
-          poster: 'https://lumiere-a.akamaihd.net/v1/images/image003_f1e9732d.jpeg?region=0,0,662,827',
-          showtimes: [
-            { id: 301, date: '2025-05-04', time: '14:00' },
-            { id: 302, date: '2025-05-04', time: '19:00' },
-            { id: 303, date: '2025-05-05', time: '16:30' },
-          ]
-        },
-      ];
-
-      setMovies(moviesData);
-      setLoading(false);
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        
+        // Obtener películas en cartelera
+        const moviesData = await movieService.getCurrentlyShowing();
+        setMovies(moviesData);
+        
+        // Cargar funciones del día para todas las películas
+        const promises = moviesData.map(movie => 
+          showService.getShowsForMovieInCinema(movie.id, cinemaId, selectedDate)
+        );
+        
+        const showsResults = await Promise.all(promises);
+        const allShows = showsResults.flat();
+        setShows(allShows);
+        
+        setError(null);
+      } catch (err) {
+        console.error('Error fetching data:', err);
+        setError('Error al cargar los datos. Por favor, intenta de nuevo.');
+      } finally {
+        setLoading(false);
+      }
     };
-
-    fetchMovies();
-  }, []);
-
-  const dates = [
-    { value: '2025-05-04', label: 'Hoy', day: '4', month: 'Mayo' },
-    { value: '2025-05-05', label: 'Mañana', day: '5', month: 'Mayo' },
-    { value: '2025-05-06', label: '', day: '6', month: 'Mayo' },
-    { value: '2025-05-07', label: '', day: '7', month: 'Mayo' },
-    { value: '2025-05-08', label: '', day: '8', month: 'Mayo' },
-  ];
-
-  const handleSelectMovie = (movie: Movie, showtimeId: number) => {
-    // Aquí redirigirías a la selección de asientos con estos datos
-    console.log(`Seleccionado: ${movie.title}, Función ID: ${showtimeId}`);
+    
+    fetchData();
+  }, [cinemaId, selectedDate]);
+  
+  // Obtener las próximas fechas para el selector
+  const getDates = () => {
+    const dates = [];
+    const today = new Date();
+    
+    for (let i = 0; i < 7; i++) {
+      const date = new Date(today);
+      date.setDate(today.getDate() + i);
+      
+      const formattedDate = date.toISOString().split('T')[0];
+      let label = '';
+      
+      if (i === 0) label = 'Hoy';
+      else if (i === 1) label = 'Mañana';
+      
+      dates.push({
+        date: formattedDate,
+        label,
+        day: date.getDate(),
+        month: date.toLocaleString('es-ES', { month: 'short' })
+      });
+    }
+    
+    return dates;
   };
-
-  const filteredMovies = movies.filter(movie => 
-    movie.showtimes.some(showtime => showtime.date === selectedDate)
-  );
-
-  if (loading) {
-    return (
-      <Container className="py-5 text-center">
-        <div className="spinner-border text-primary" role="status">
-          <span className="visually-hidden">Cargando...</span>
-        </div>
-      </Container>
-    );
-  }
-
+  
+  // Agrupar funciones por película
+  const getShowsByMovie = () => {
+    const groupedShows: Record<string, Show[]> = {};
+    
+    shows.forEach(show => {
+      if (!groupedShows[show.movieId]) {
+        groupedShows[show.movieId] = [];
+      }
+      groupedShows[show.movieId].push(show);
+    });
+    
+    return groupedShows;
+  };
+  
+  const handleSelectShow = (showId: string) => {
+    navigate(`/pos/seats/${showId}`);
+  };
+  
+  const formatTime = (dateTimeString: string) => {
+    return new Date(dateTimeString).toLocaleTimeString('es-ES', { 
+      hour: '2-digit', 
+      minute: '2-digit' 
+    });
+  };
+  
+  const dates = getDates();
+  const showsByMovie = getShowsByMovie();
+  
   return (
     <Container fluid className="py-4">
       <h1 className="mb-4">Venta de Entradas</h1>
       
       {/* Selector de fecha */}
-      <div className="date-selector mb-4">
-        <div className="d-flex overflow-auto pb-2">
-          {dates.map((date) => (
-            <Card 
-              key={date.value}
-              className={`date-card me-3 ${selectedDate === date.value ? 'selected' : ''}`}
-              onClick={() => setSelectedDate(date.value)}
-            >
-              <Card.Body className="text-center p-3">
-                {date.label && <div className="date-label mb-1">{date.label}</div>}
-                <div className="date-day">{date.day}</div>
-                <div className="date-month">{date.month}</div>
-              </Card.Body>
-            </Card>
-          ))}
-        </div>
-      </div>
+      <Card className="mb-4">
+        <Card.Body>
+          <h5 className="mb-3">Seleccionar Fecha</h5>
+          <div className="d-flex overflow-auto date-selector">
+            {dates.map((date) => (
+              <Card 
+                key={date.date}
+                className={`date-card me-3 ${selectedDate === date.date ? 'active' : ''}`}
+                onClick={() => setSelectedDate(date.date)}
+              >
+                <Card.Body className="text-center py-2">
+                  {date.label && <div className="date-label mb-1">{date.label}</div>}
+                  <div className="date-day">{date.day}</div>
+                  <div className="date-month">{date.month}</div>
+                </Card.Body>
+              </Card>
+            ))}
+          </div>
+        </Card.Body>
+      </Card>
       
-      {/* Lista de películas */}
-      <Row>
-        {filteredMovies.length > 0 ? (
-          filteredMovies.map((movie) => (
-            <Col key={movie.id} md={6} lg={4} className="mb-4">
-              <Card className="h-100 pos-movie-card">
-                <div className="d-flex pos-movie-content">
-                  <div className="pos-movie-poster">
-                    <img src={movie.poster} alt={movie.title} />
-                  </div>
-                  <div className="pos-movie-details p-3">
-                    <h5>{movie.title}</h5>
-                    <div className="showtimes-container mt-3">
-                      <p className="mb-2 fw-bold">Horarios:</p>
-                      <div className="d-flex flex-wrap">
-                        {movie.showtimes
-                          .filter(showtime => showtime.date === selectedDate)
-                          .map((showtime) => (
-                            <Button 
-                              key={showtime.id}
-                              variant="outline-primary" 
-                              size="sm"
-                              className="me-2 mb-2 time-btn"
-                              onClick={() => handleSelectMovie(movie, showtime.id)}
-                            >
-                              {showtime.time}
-                            </Button>
-                          ))
-                        }
+      {/* Lista de películas con funciones */}
+      {loading ? (
+        <div className="text-center py-5">
+          <div className="spinner-border text-primary" role="status">
+            <span className="visually-hidden">Cargando...</span>
+          </div>
+        </div>
+      ) : error ? (
+        <Alert variant="danger">{error}</Alert>
+      ) : (
+        <Row>
+          {movies.map(movie => {
+            const movieShows = showsByMovie[movie.id] || [];
+            
+            if (movieShows.length === 0) return null;
+            
+            return (
+              <Col key={movie.id} lg={6} className="mb-4">
+                <Card className="h-100">
+                  <Card.Body>
+                    <div className="d-flex mb-3">
+                      <img 
+                        src={movie.posterUrl || 'https://via.placeholder.com/100x150'} 
+                        alt={movie.title} 
+                        className="me-3 movie-thumbnail"
+                        style={{ width: '80px', height: '120px', objectFit: 'cover' }}
+                      />
+                      <div>
+                        <h5 className="mb-2">{movie.title}</h5>
+                        <div className="badge bg-secondary me-2">{movie.durationMinutes} min</div>
+                        <div className="badge bg-primary">{movie.genre}</div>
                       </div>
                     </div>
-                  </div>
-                </div>
-              </Card>
+                    
+                    <h6 className="mb-2">Horarios:</h6>
+                    <div className="d-flex flex-wrap">
+                      {movieShows.map(show => (
+                        <Button
+                          key={show.id}
+                          variant="outline-primary"
+                          className="me-2 mb-2"
+                          onClick={() => handleSelectShow(show.id)}
+                        >
+                          {formatTime(show.startTime)} - {show.roomName}
+                          {show.is3d && <span className="ms-1 badge bg-info">3D</span>}
+                        </Button>
+                      ))}
+                    </div>
+                  </Card.Body>
+                </Card>
+              </Col>
+            );
+          })}
+          
+          {Object.keys(showsByMovie).length === 0 && (
+            <Col>
+              <div className="alert alert-info">
+                No hay funciones disponibles para la fecha seleccionada.
+              </div>
             </Col>
-          ))
-        ) : (
-          <Col className="text-center py-5">
-            <h4>No hay funciones disponibles para esta fecha</h4>
-          </Col>
-        )}
-      </Row>
+          )}
+        </Row>
+      )}
     </Container>
   );
 };
