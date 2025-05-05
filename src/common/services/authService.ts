@@ -1,4 +1,4 @@
-// src/common/services/authService.ts
+// src/common/services/authService.ts (Versión mejorada)
 import { apiRequest } from './apiClient';
 
 export interface LoginRequest {
@@ -7,15 +7,15 @@ export interface LoginRequest {
 }
 
 export interface RegisterRequest {
-  email: string;
-  password: string;
   firstName: string;
   lastName: string;
+  email: string;
+  password: string;
 }
 
 export interface AuthResponse {
   token: string;
-  refreshToken: string; // Added this property
+  refreshToken: string;
   user: {
     id: string;
     email: string;
@@ -28,6 +28,12 @@ export interface AuthResponse {
 export interface ApiResponse {
   success: boolean;
   message: string;
+}
+
+// Ampliar la respuesta de registro para proporcionar más información
+export interface RegisterResponse extends ApiResponse {
+  userId?: string;
+  emailSent?: boolean;
 }
 
 const authService = {
@@ -43,13 +49,37 @@ const authService = {
   },
 
   /**
-   * Register a new user
+   * Register a new user with enhanced error handling
    */
-  register: async (userData: RegisterRequest): Promise<ApiResponse> => {
+  register: async (userData: RegisterRequest): Promise<RegisterResponse> => {
+    try {
+      const response = await apiRequest<RegisterResponse>({
+        method: 'POST',
+        url: '/auth/register',
+        data: userData,
+      });
+      
+      return response;
+    } catch (error: any) {
+      // Manejo mejorado de errores
+      if (error.response?.status === 409) {
+        throw new Error('Este email ya está registrado. Por favor usa otro o recupera tu contraseña.');
+      } else if (error.response?.status === 400) {
+        throw new Error(error.response.data?.message || 'Los datos proporcionados no son válidos.');
+      } else {
+        throw new Error('Error en el registro. Por favor intenta más tarde.');
+      }
+    }
+  },
+
+  /**
+   * Verify email with verification token
+   */
+  verifyEmail: async (token: string): Promise<ApiResponse> => {
     return apiRequest<ApiResponse>({
       method: 'POST',
-      url: '/auth/register',
-      data: userData,
+      url: '/auth/verify-email',
+      data: { token },
     });
   },
 
@@ -105,6 +135,29 @@ const authService = {
       url: '/auth/reset-password',
       data: { token, newPassword },
     });
+  },
+
+  /**
+   * Check if a user is authenticated
+   */
+  isAuthenticated: (): boolean => {
+    const token = localStorage.getItem('annuar-token');
+    return !!token;
+  },
+
+  /**
+   * Get current user data from token (without API call)
+   */
+  getCurrentUser: () => {
+    const userJson = localStorage.getItem('annuar-user');
+    if (!userJson) return null;
+    
+    try {
+      return JSON.parse(userJson);
+    } catch (e) {
+      console.error('Error parsing user data', e);
+      return null;
+    }
   }
 };
 

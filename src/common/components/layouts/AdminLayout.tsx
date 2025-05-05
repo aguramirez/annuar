@@ -8,7 +8,7 @@ import ThemeToggle from '../../../components/ThemeToggle';
 const AdminLayout: React.FC = () => {
   const [showSidebar, setShowSidebar] = useState(false);
   const location = useLocation();
-  
+
   const isActive = (path: string) => {
     return location.pathname === path || location.pathname.startsWith(`${path}/`);
   };
@@ -26,8 +26,8 @@ const AdminLayout: React.FC = () => {
           </Navbar.Brand>
           <div className="d-flex align-items-center">
             <ThemeToggle className="me-3" />
-            <Navbar.Toggle 
-              aria-controls="sidebar-nav" 
+            <Navbar.Toggle
+              aria-controls="sidebar-nav"
               onClick={() => setShowSidebar(true)}
             />
           </div>
@@ -54,9 +54,13 @@ const AdminLayout: React.FC = () => {
               <i className="bi bi-box-seam me-2"></i>
               Productos
             </Nav.Link>
-            
+            <Nav.Link as={Link} to="/admin/users" className={isActive('/admin/users') ? 'active' : ''}>
+              <i className="bi bi-people me-2"></i>
+              Usuarios
+            </Nav.Link>
+
             <div className="sidebar-divider my-3"></div>
-            
+
             <Nav.Link as={Link} to="/admin/reports/sales" className={isActive('/admin/reports') ? 'active' : ''}>
               <i className="bi bi-graph-up me-2"></i>
               Reportes
@@ -65,9 +69,9 @@ const AdminLayout: React.FC = () => {
               <i className="bi bi-gear me-2"></i>
               Configuración
             </Nav.Link>
-            
+
             <div className="sidebar-divider my-3"></div>
-            
+
             <Nav.Link as={Link} to="/" target="_blank">
               <i className="bi bi-box-arrow-up-right me-2"></i>
               Ver Sitio Web
@@ -101,9 +105,13 @@ const AdminLayout: React.FC = () => {
                 <i className="bi bi-box-seam me-2"></i>
                 Productos
               </Nav.Link>
-              
+              <Nav.Link as={Link} to="/admin/users" onClick={closeSidebar} className={isActive('/admin/users') ? 'active' : ''}>
+                <i className="bi bi-people me-2"></i>
+                Usuarios
+              </Nav.Link>
+
               <div className="sidebar-divider my-3"></div>
-              
+
               <Nav.Link as={Link} to="/admin/reports/sales" onClick={closeSidebar} className={isActive('/admin/reports') ? 'active' : ''}>
                 <i className="bi bi-graph-up me-2"></i>
                 Reportes

@@ -33,6 +33,9 @@ import POSCheckout from './apps/pos/pages/POSCheckout';
 import ScanQR from './apps/validator/pages/ScanQR';
 import ValidatorSettings from './apps/validator/pages/ValidatorSettings';
 
+import RegisterPage from './apps/website/pages/RegisterPage';
+import UserManagement from './apps/admin/pages/UserManagement';
+
 // Auth
 import { AuthProvider } from './auth/AuthContext';
 import ProtectedRoute from './auth/ProtectedRoute';
@@ -48,6 +51,7 @@ const AppRoutes: React.FC = () => {
             <Route path="movie/:id" element={<MovieDetail />} />
             <Route path="seats/:showId" element={<SeatSelection />} />
             <Route path="login" element={<Login />} />
+            <Route path="register" element={<RegisterPage />} />
             <Route path="payment/:reservationId" element={
               <ProtectedRoute>
                 <Payment />
@@ -68,6 +72,7 @@ const AppRoutes: React.FC = () => {
             <Route path="movies" element={<MovieManagement />} />
             <Route path="shows" element={<ShowManagement />} />
             <Route path="products" element={<ProductManagement />} />
+            <Route path="users" element={<UserManagement />} />
             <Route path="reports/sales" element={<ReportingSales />} />
             <Route path="settings" element={<AdminSettings />} />
           </Route>
