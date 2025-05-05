@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Container, Row, Col, Button, Badge, Card } from 'react-bootstrap';
-import Navbar from '../../../common/components/Navbar';
+import Navbar from '../../../components/shared/Navbar';
 
 interface Movie {
   id: number;

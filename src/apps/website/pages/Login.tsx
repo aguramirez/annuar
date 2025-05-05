@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Container, Card, Button, Form } from 'react-bootstrap';
-import Navbar from '../../../common/components/Navbar';
+import Navbar from '../../../components/shared/Navbar';
 
 interface LoginProps {
   setIsLoggedIn: (isLoggedIn: boolean) => void;
@@ -34,7 +34,7 @@ const Login: React.FC<LoginProps> = ({ setIsLoggedIn }) => {
 
   return (
     <div className="login-page fade-in">
-      <Navbar />
+      {/* <Navbar /> */}
 
       <Container className="py-5">
         <div className="login-container">

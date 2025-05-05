@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Container, Row, Col, Card, Button, Carousel, Badge } from 'react-bootstrap';
-import Navbar from '../../../common/components/Navbar';
+import Navbar from '../../../components/shared/Navbar';
 import { useTheme } from '../../../common/context/ThemeContext';
 import FeaturedMovieSlide from './FeaturedMovieSlide';
 
@@ -63,7 +63,7 @@ const Home: React.FC<HomeProps> = ({ movies, setSelectedMovie }) => {
 
   return (
     <div className="home-page">
-      <Navbar />
+      {/* <Navbar /> */}
       
       {/* <div className="hero-section">
         <Container>

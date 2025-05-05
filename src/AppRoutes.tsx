@@ -1,5 +1,5 @@
 // src/AppRoutes.tsx
-import React from 'react';
+import React, { useState } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 
 // Layouts
@@ -38,22 +38,69 @@ import { AuthProvider } from './auth/AuthProvider';
 import ProtectedRoute from './auth/ProtectedRoute';
 
 const AppRoutes: React.FC = () => {
+  // State for shared data between routes
+  const [selectedMovie, setSelectedMovie] = useState<any>(null);
+  const [selectedShowtime, setSelectedShowtime] = useState<{ date: string; time: string }>({
+    date: "",
+    time: ""
+  });
+  const [ticketCount, setTicketCount] = useState<number>(1);
+  const [selectedSeats, setSelectedSeats] = useState<string[]>([]);
+  const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
+
+  // Mock movies data for initial render
+  const [movies, setMovies] = useState<any[]>([
+    {
+      id: 1,
+      title: "Example Movie",
+      director: "Director Name",
+      genre: ["Action", "Adventure"],
+      duration: 120,
+      releaseDate: "2025-01-01",
+      poster: "https://via.placeholder.com/300x450",
+      heroImage: "https://via.placeholder.com/1920x1080",
+      synopsis: "Example movie synopsis.",
+      trailerUrl: "https://www.youtube.com/embed/example",
+      rating: 4.5,
+      showtimes: [
+        {
+          date: "2025-05-10",
+          times: ["14:30", "18:00", "21:15"]
+        }
+      ]
+    }
+  ]);
   return (
     <BrowserRouter>
       <AuthProvider>
         <Routes>
           {/* Website Routes */}
           <Route path="/" element={<WebsiteLayout />}>
-            <Route index element={<Home />} />
-            <Route path="movie/:id" element={<MovieDetail />} />
-            <Route path="seats" element={<SeatSelection />} />
-            <Route path="login" element={<Login />} />
-            <Route path="payment" element={<Payment />} />
+            <Route index element={<Home movies={movies} setSelectedMovie={setSelectedMovie} />} />
+            <Route path="movie/:id" element={<MovieDetail
+              movie={selectedMovie}
+              setSelectedShowtime={setSelectedShowtime}
+              setTicketCount={setTicketCount}
+            />} />
+            <Route path="seats" element={<SeatSelection
+              movie={selectedMovie}
+              showtime={selectedShowtime}
+              ticketCount={ticketCount}
+              selectedSeats={selectedSeats}
+              setSelectedSeats={setSelectedSeats}
+            />} />
+            <Route path="login" element={<Login setIsLoggedIn={setIsLoggedIn} />} />
+            <Route path="payment" element={<Payment
+              movie={selectedMovie}
+              showtime={selectedShowtime}
+              ticketCount={ticketCount}
+              selectedSeats={selectedSeats}
+            />} />
           </Route>
 
           {/* Admin Routes */}
-          <Route 
-            path="/admin" 
+          <Route
+            path="/admin"
             element={
               <ProtectedRoute requiredRole="admin">
                 <AdminLayout />
@@ -69,8 +116,8 @@ const AppRoutes: React.FC = () => {
           </Route>
 
           {/* POS Routes */}
-          <Route 
-            path="/pos" 
+          <Route
+            path="/pos"
             element={
               <ProtectedRoute requiredRole="staff">
                 <POSLayout />
@@ -84,8 +131,8 @@ const AppRoutes: React.FC = () => {
           </Route>
 
           {/* Validator Routes */}
-          <Route 
-            path="/validator" 
+          <Route
+            path="/validator"
             element={
               <ProtectedRoute requiredRole="staff">
                 <ValidatorLayout />

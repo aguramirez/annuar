@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { Outlet } from 'react-router-dom';
 import { Container, Nav, Navbar, Offcanvas } from 'react-bootstrap';
 import { Link, useLocation } from 'react-router-dom';
-import ThemeToggle from '../../components/ThemeToggle';
+import ThemeToggle from '../../../components/ThemeToggle';
 
 const AdminLayout: React.FC = () => {
   const [showSidebar, setShowSidebar] = useState(false);

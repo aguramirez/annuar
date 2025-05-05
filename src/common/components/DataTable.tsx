@@ -17,7 +17,7 @@ interface DataTableProps<T> {
   searchPlaceholder?: string;
 }
 
-function DataTable<T>({
+function DataTable<T extends Record<string, any>>({
   columns,
   data,
   keyField,

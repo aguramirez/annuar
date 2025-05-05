@@ -31,9 +31,22 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   useEffect(() => {
     // Verificar si hay un usuario en localStorage
     const storedUser = localStorage.getItem('user');
+    
     if (storedUser) {
       setUser(JSON.parse(storedUser));
+    } else if (import.meta.env.MODE === 'development') {
+      // Auto-login para desarrollo
+      const devUser: User = {
+        id: 'dev-user',
+        name: 'Usuario de Desarrollo',
+        email: 'dev@example.com',
+        role: 'staff', // Puedes cambiar a 'staff' o 'customer' según necesites
+      };
+      
+      localStorage.setItem('user', JSON.stringify(devUser));
+      setUser(devUser);
     }
+    
     setIsLoading(false);
   }, []);
 

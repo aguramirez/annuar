@@ -27,7 +27,7 @@ const ValidatorLayout: React.FC = () => {
             <Button 
               variant="outline-light" 
               size="sm"
-              as={Link}
+              as={Link as any}
               to="/validator/settings"
               className="me-3"
             >

@@ -1,5 +1,5 @@
 // src/common/services/apiClient.ts
-import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios';
+import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse, AxiosError, InternalAxiosRequestConfig } from 'axios';
 
 // Crear una instancia de Axios con configuración básica
 const apiClient: AxiosInstance = axios.create({
@@ -11,27 +11,25 @@ const apiClient: AxiosInstance = axios.create({
 
 // Interceptor para agregar el token a las solicitudes
 apiClient.interceptors.request.use(
-  (config) => {
+  (config: InternalAxiosRequestConfig) => {
     const token = localStorage.getItem('token');
     if (token) {
-      config.headers['Authorization'] = `Bearer ${token}`;
+      config.headers.Authorization = `Bearer ${token}`;
     }
     return config;
   },
-  (error) => {
+  (error: AxiosError) => {
     return Promise.reject(error);
   }
 );
 
-// Interceptor para manejar respuestas y errores
+// Response interceptor for handling errors
 apiClient.interceptors.response.use(
-  (response) => {
+  (response: AxiosResponse) => {
     return response;
   },
-  (error) => {
-    // Si el error es 401 Unauthorized, el token ha expirado
+  (error: AxiosError) => {
     if (error.response && error.response.status === 401) {
-      // Redirigir al login o refrescar token
       localStorage.removeItem('token');
       localStorage.removeItem('user');
       window.location.href = '/login';
@@ -40,7 +38,7 @@ apiClient.interceptors.response.use(
   }
 );
 
-// Función genérica para hacer solicitudes HTTP
+// Generic function for HTTP requests
 const apiRequest = async <T>(config: AxiosRequestConfig): Promise<T> => {
   try {
     const response: AxiosResponse<T> = await apiClient(config);
