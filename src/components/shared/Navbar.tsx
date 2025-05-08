@@ -1,89 +1,81 @@
-import React, { useState, useEffect } from 'react';
-import { Container, Navbar as BootstrapNavbar, Nav } from 'react-bootstrap';
-import { Link, useLocation } from 'react-router-dom';
-import ThemeToggle from '../../apps/website/pages/ThemeToggle';
+// src/components/shared/Navbar.tsx
+import React from 'react';
+import { Navbar as BootstrapNavbar, Container, Nav, Button, NavDropdown } from 'react-bootstrap';
+import { Link, NavLink, useNavigate } from 'react-router-dom';
+import { useFirebaseAuth } from '../../auth/FirebaseAuthContext';
+import LogoutButton from '../auth/LogoutButton';
+import ThemeToggle from '../ThemeToggle';
 
-interface NavbarProps {
-  showBackButton?: boolean;
-  onBack?: () => void;
-}
-
-const Navbar: React.FC<NavbarProps> = ({
-  showBackButton = false,
-  onBack
-}) => {
-  const [scrolled, setScrolled] = useState(false);
-  const location = useLocation();
-
-  // Detect scroll position to change navbar appearance
-  useEffect(() => {
-    const handleScroll = () => {
-      const isScrolled = window.scrollY > 50;
-      if (isScrolled !== scrolled) {
-        setScrolled(isScrolled);
-      }
-    };
-
-    document.addEventListener('scroll', handleScroll);
-    return () => {
-      document.removeEventListener('scroll', handleScroll);
-    };
-  }, [scrolled]);
-
-  // Check if the current route is active
-  const isActive = (path: string) => {
-    return location.pathname === path;
-  };
+const Navbar: React.FC = () => {
+  const { currentUser, isAuthenticated } = useFirebaseAuth();
+  const navigate = useNavigate();
 
   return (
-    <BootstrapNavbar 
-      expand="lg" 
-      className={`navbar py-3 ${scrolled ? 'navbar-scrolled' : ''}`}
-      fixed="top"
-    >
+    <BootstrapNavbar bg="primary" variant="dark" expand="lg" sticky="top" className="navbar-main">
       <Container>
-        <div className="d-flex align-items-center">
-          {showBackButton && onBack && (
-            <button
-              className="btn btn-back me-3"
-              onClick={onBack}
-              aria-label="Volver"
-            >
-              <i className="bi bi-arrow-left"></i>
-            </button>
-          )}
-          <Link to="/" className="navbar-brand d-flex align-items-center">
-            <img
-              src="/src/assets/logo.jpg"
-              alt="Annuar Shopping Cine"
-              className="logo-img"
-            />
-            <span>Annuar Shopping Cine</span>
-          </Link>
-        </div>
-
-        <BootstrapNavbar.Toggle aria-controls="basic-navbar-nav" />
-        <BootstrapNavbar.Collapse id="basic-navbar-nav">
-          <Nav className="ms-auto">
-            <Nav.Link as={Link} to="/" className={`nav-link ${isActive('/') ? 'active' : ''}`}>
-              <i className="bi bi-house-door me-1"></i> Inicio
-            </Nav.Link>
-            <Nav.Link as={Link} to="/" className={`nav-link ${isActive('/movies') ? 'active' : ''}`}>
-              <i className="bi bi-film me-1"></i> Cartelera
-            </Nav.Link>
-            <Nav.Link as={Link} to="/" className={`nav-link ${isActive('/promos') ? 'active' : ''}`}>
-              <i className="bi bi-ticket-perforated me-1"></i> Promociones
-            </Nav.Link>
-            <Nav.Link as={Link} to="/" className={`nav-link ${isActive('/contact') ? 'active' : ''}`}>
-              <i className="bi bi-envelope me-1"></i> Contacto
-            </Nav.Link>
+        <BootstrapNavbar.Brand as={Link} to="/" className="d-flex align-items-center">
+          <i className="bi bi-film me-2"></i>
+          <span className="fw-bold">Annuar Cine</span>
+        </BootstrapNavbar.Brand>
+        
+        <BootstrapNavbar.Toggle aria-controls="main-navbar" />
+        
+        <BootstrapNavbar.Collapse id="main-navbar">
+          <Nav className="me-auto">
+            <Nav.Link as={NavLink} to="/" end>Inicio</Nav.Link>
+            <Nav.Link as={NavLink} to="/movies">Cartelera</Nav.Link>
+            <Nav.Link as={NavLink} to="/coming-soon">Próximos Estrenos</Nav.Link>
+            <Nav.Link as={NavLink} to="/promotions">Promociones</Nav.Link>
           </Nav>
-          <div className="d-flex align-items-center ms-lg-4">
-            <ThemeToggle />
-            <button className="btn-user ms-3">
-              <i className="bi bi-person-circle"></i>
-            </button>
-          </div>
+          
+          <Nav className="d-flex align-items-center">
+            <ThemeToggle className="me-3" />
+            
+            {isAuthenticated ? (
+              <>
+                {/* Usuario autenticado */}
+                <NavDropdown 
+                  title={
+                    <span>
+                      <i className="bi bi-person-circle me-1"></i>
+                      {currentUser?.displayName || 'Mi Cuenta'}
+                    </span>
+                  } 
+                  id="user-dropdown"
+                  align="end"
+                >
+                  <NavDropdown.Item as={Link} to="/profile">Mi Perfil</NavDropdown.Item>
+                  <NavDropdown.Item as={Link} to="/orders">Mis Entradas</NavDropdown.Item>
+                  <NavDropdown.Divider />
+                  <NavDropdown.Item as="div" className="p-0">
+                    <LogoutButton 
+                      variant="link" 
+                      className="text-danger w-100 text-start ps-3 py-2" 
+                    />
+                  </NavDropdown.Item>
+                </NavDropdown>
+              </>
+            ) : (
+              <>
+                {/* Usuario no autenticado */}
+                <Button 
+                  variant="outline-light" 
+                  size="sm" 
+                  className="me-2"
+                  onClick={() => navigate('/login')}
+                >
+                  Iniciar Sesión
+                </Button>
+                <Button 
+                  variant="light" 
+                  size="sm"
+                  onClick={() => navigate('/register')}
+                >
+                  Registrarse
+                </Button>
+              </>
+            )}
+          </Nav>
         </BootstrapNavbar.Collapse>
       </Container>
     </BootstrapNavbar>

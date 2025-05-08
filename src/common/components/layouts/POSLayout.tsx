@@ -1,17 +1,18 @@
 // src/common/components/layouts/POSLayout.tsx
 import React from 'react';
 import { Outlet } from 'react-router-dom';
-import { Container, Nav, Navbar, Button } from 'react-bootstrap';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { Container, Nav, Navbar, Dropdown } from 'react-bootstrap';
+import { Link, useLocation } from 'react-router-dom';
 import ThemeToggle from '../../../components/ThemeToggle';
+import LogoutButton from '../../../components/auth/LogoutButton';
+import { useFirebaseAuth } from '../../../auth/FirebaseAuthContext';
 
 const POSLayout: React.FC = () => {
   const location = useLocation();
-  const navigate = useNavigate();
-  
-  const handleLogout = () => {
-    // Lógica para cerrar sesión
-    navigate('/');
+  const { currentUser } = useFirebaseAuth();
+
+  const isActive = (path: string) => {
+    return location.pathname === path || location.pathname.startsWith(`${path}/`);
   };
 
   return (
@@ -24,15 +25,29 @@ const POSLayout: React.FC = () => {
             Annuar POS
           </Navbar.Brand>
           <div className="d-flex align-items-center">
+            {/* Dropdown del usuario */}
+            <Dropdown align="end" className="me-3">
+              <Dropdown.Toggle variant="outline-light" id="pos-user-dropdown">
+                <i className="bi bi-person-circle me-1"></i>
+                {currentUser?.displayName || 'Operador'}
+              </Dropdown.Toggle>
+              
+              <Dropdown.Menu>
+                <Dropdown.Item as={Link} to="/pos/settings/profile">Mi Perfil</Dropdown.Item>
+                <Dropdown.Item as={Link} to="/pos/settings">Configuración</Dropdown.Item>
+                <Dropdown.Divider />
+                <Dropdown.Item as="div" className="p-0">
+                  <LogoutButton 
+                    variant="link" 
+                    className="text-danger w-100 text-start ps-3 py-2" 
+                  />
+                </Dropdown.Item>
+              </Dropdown.Menu>
+            </Dropdown>
+            
             <ThemeToggle className="me-3" />
-            <Button 
-              variant="outline-light" 
-              size="sm"
-              onClick={handleLogout}
-            >
-              <i className="bi bi-box-arrow-right me-2"></i>
-              Cerrar Sesión
-            </Button>
+            
+            <LogoutButton variant="outline-light" size="sm" />
           </div>
         </Container>
       </Navbar>
@@ -46,15 +61,15 @@ const POSLayout: React.FC = () => {
       <Navbar bg="light" fixed="bottom" className="pos-bottom-nav">
         <Container>
           <Nav className="w-100 justify-content-around">
-            <Nav.Link as={Link} to="/pos" className={location.pathname === '/pos' ? 'active' : ''}>
+            <Nav.Link as={Link} to="/pos" className={isActive('/pos') && !isActive('/pos/products') && !isActive('/pos/checkout') ? 'active' : ''}>
               <i className="bi bi-ticket-perforated"></i>
               <span>Entradas</span>
             </Nav.Link>
-            <Nav.Link as={Link} to="/pos/products" className={location.pathname === '/pos/products' ? 'active' : ''}>
+            <Nav.Link as={Link} to="/pos/products" className={isActive('/pos/products') ? 'active' : ''}>
               <i className="bi bi-cup-straw"></i>
               <span>Productos</span>
             </Nav.Link>
-            <Nav.Link as={Link} to="/pos/checkout" className={location.pathname === '/pos/checkout' ? 'active' : ''}>
+            <Nav.Link as={Link} to="/pos/checkout" className={isActive('/pos/checkout') ? 'active' : ''}>
               <i className="bi bi-cart3"></i>
               <span>Pago</span>
             </Nav.Link>

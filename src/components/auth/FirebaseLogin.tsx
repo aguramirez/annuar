@@ -1,54 +1,83 @@
-// src/apps/website/pages/Login.tsx
+// src/components/auth/FirebaseLogin.tsx
 import React, { useState, useEffect } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { Container, Row, Col, Card, Form, Button, Alert, Spinner } from 'react-bootstrap';
-import { useAuth } from '../../../auth/AuthContext';
-import GoogleLoginButton from '../../../components/auth/GoogleLoginButton';
+import { useFirebaseAuth } from '../../auth/FirebaseAuthContext';
 
-const Login: React.FC = () => {
+const FirebaseLogin: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [localError, setLocalError] = useState<string | null>(null);
   
-  const { login, error, isAuthenticated, isLoading } = useAuth();
+  const { 
+    signInWithEmail, 
+    signInWithGoogle, 
+    signInWithFacebook,
+    isAuthenticated, 
+    isLoading, 
+    error,
+    clearError
+  } = useFirebaseAuth();
+  
   const navigate = useNavigate();
   const location = useLocation();
   
   // Get the "from" path from location state, or default to home
   const from = (location.state as any)?.from?.pathname || '/';
   
-  // If already authenticated, redirect to the original destination
+  // If already authenticated, redirect
   useEffect(() => {
     if (isAuthenticated && !isLoading) {
       navigate(from, { replace: true });
     }
   }, [isAuthenticated, isLoading, navigate, from]);
   
-  const handleSubmit = async (e: React.FormEvent) => {
+  // Clear errors when component unmounts
+  useEffect(() => {
+    return () => {
+      clearError();
+    };
+  }, [clearError]);
+  
+  // Handle email/password login
+  const handleEmailLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Simple form validation
+    // Simple validation
     if (!email || !password) {
-      setErrorMessage('Por favor ingresa tu email y contraseña');
+      setLocalError('Por favor ingresa tu email y contraseña');
       return;
     }
     
     setIsSubmitting(true);
-    setErrorMessage(null);
+    setLocalError(null);
     
     try {
-      // Use the login function from AuthContext
-      await login(email, password);
-    } catch (error) {
-      // Error handling is done in the AuthContext
+      await signInWithEmail(email, password);
+    } catch (err) {
+      // Error handling is done by the context
     } finally {
       setIsSubmitting(false);
     }
   };
   
-  const handleGoogleLoginError = (message: string) => {
-    setErrorMessage(message);
+  // Handle Google login
+  const handleGoogleLogin = async () => {
+    try {
+      await signInWithGoogle();
+    } catch (err) {
+      // Error handling is done by the context
+    }
+  };
+  
+  // Handle Facebook login
+  const handleFacebookLogin = async () => {
+    try {
+      await signInWithFacebook();
+    } catch (err) {
+      // Error handling is done by the context
+    }
   };
   
   return (
@@ -60,21 +89,36 @@ const Login: React.FC = () => {
               <h3 className="mb-0">Iniciar Sesión</h3>
             </Card.Header>
             <Card.Body className="p-4">
-              {errorMessage && <Alert variant="danger">{errorMessage}</Alert>}
+              {localError && <Alert variant="danger">{localError}</Alert>}
               {error && <Alert variant="danger">{error}</Alert>}
               
               <div className="mb-4">
-                <GoogleLoginButton 
+                <Button 
+                  variant="outline-danger" 
+                  className="w-100 mb-2"
+                  onClick={handleGoogleLogin}
+                  disabled={isLoading}
+                >
+                  <i className="bi bi-google me-2"></i>
+                  Continuar con Google
+                </Button>
+                
+                <Button 
+                  variant="outline-primary" 
                   className="w-100 mb-3"
-                  onError={handleGoogleLoginError}
-                />
+                  onClick={handleFacebookLogin}
+                  disabled={isLoading}
+                >
+                  <i className="bi bi-facebook me-2"></i>
+                  Continuar con Facebook
+                </Button>
                 
                 <div className="separator text-center mb-3">
                   <span className="bg-white px-2 text-muted">O</span>
                 </div>
               </div>
               
-              <Form onSubmit={handleSubmit}>
+              <Form onSubmit={handleEmailLogin}>
                 <Form.Group className="mb-3">
                   <Form.Label>Correo Electrónico</Form.Label>
                   <Form.Control
@@ -82,7 +126,7 @@ const Login: React.FC = () => {
                     placeholder="correo@ejemplo.com"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    disabled={isSubmitting}
+                    disabled={isSubmitting || isLoading}
                     required
                   />
                 </Form.Group>
@@ -94,17 +138,16 @@ const Login: React.FC = () => {
                     placeholder="Tu contraseña"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    disabled={isSubmitting}
+                    disabled={isSubmitting || isLoading}
                     required
                   />
                   <div className="d-flex justify-content-end mt-1">
-                    <Button 
-                      variant="link" 
-                      className="p-0 text-decoration-none"
-                      onClick={() => navigate('/forgot-password')}
+                    <Link 
+                      to="/reset-password"
+                      className="text-decoration-none"
                     >
                       ¿Olvidaste tu contraseña?
-                    </Button>
+                    </Link>
                   </div>
                 </Form.Group>
                 
@@ -135,13 +178,12 @@ const Login: React.FC = () => {
               <div className="text-center mt-4">
                 <p className="mb-0">
                   ¿No tienes una cuenta?{' '}
-                  <Button
-                    variant="link"
-                    className="p-0 text-decoration-none"
-                    onClick={() => navigate('/register')}
+                  <Link 
+                    to="/register"
+                    className="text-decoration-none"
                   >
                     Regístrate aquí
-                  </Button>
+                  </Link>
                 </p>
               </div>
             </Card.Body>
@@ -152,4 +194,4 @@ const Login: React.FC = () => {
   );
 };
 
-export default Login;
+export default FirebaseLogin;

@@ -1,15 +1,14 @@
 // src/App.tsx
 import React from 'react';
+import { BrowserRouter } from 'react-router-dom';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import 'bootstrap-icons/font/bootstrap-icons.css';
 import './App.css';
-import './admin.css';
-// import './pos.css';
-// import './validator.css';
 import AppRoutes from './AppRoutes';
 import { ThemeProvider } from './common/context/ThemeContext';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
+import FirebaseAuthProvider from './auth/FirebaseAuthContext';
 
 // Create a client
 const queryClient = new QueryClient({
@@ -24,12 +23,16 @@ const queryClient = new QueryClient({
 
 const App: React.FC = () => {
   return (
-    <ThemeProvider>
-      <QueryClientProvider client={queryClient}>
-        <AppRoutes />
-        {import.meta.env.DEV && <ReactQueryDevtools initialIsOpen={false} />}
-      </QueryClientProvider>
-    </ThemeProvider>
+    <BrowserRouter>
+      <ThemeProvider>
+        <QueryClientProvider client={queryClient}>
+          <FirebaseAuthProvider>
+            <AppRoutes />
+            {import.meta.env.DEV && <ReactQueryDevtools initialIsOpen={false} />}
+          </FirebaseAuthProvider>
+        </QueryClientProvider>
+      </ThemeProvider>
+    </BrowserRouter>
   );
 };
 

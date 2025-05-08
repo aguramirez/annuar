@@ -153,12 +153,8 @@ const UserRegistrationForm: React.FC<UserRegistrationFormProps> = ({
             {...register('password', {
               required: 'La contraseña es obligatoria',
               minLength: {
-                value: 8,
-                message: 'La contraseña debe tener al menos 8 caracteres'
-              },
-              pattern: {
-                value: /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).*$/,
-                message: 'La contraseña debe contener al menos una letra mayúscula, una minúscula y un número'
+                value: 6,
+                message: 'La contraseña debe tener al menos 6 caracteres'
               }
             })}
           />

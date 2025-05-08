@@ -1,13 +1,16 @@
 // src/common/components/layouts/AdminLayout.tsx
 import React, { useState } from 'react';
 import { Outlet } from 'react-router-dom';
-import { Container, Nav, Navbar, Offcanvas } from 'react-bootstrap';
+import { Container, Nav, Navbar, Offcanvas, Button, Dropdown } from 'react-bootstrap';
 import { Link, useLocation } from 'react-router-dom';
 import ThemeToggle from '../../../components/ThemeToggle';
+import LogoutButton from '../../../components/auth/LogoutButton';
+import { useFirebaseAuth } from '../../../auth/FirebaseAuthContext';
 
 const AdminLayout: React.FC = () => {
   const [showSidebar, setShowSidebar] = useState(false);
   const location = useLocation();
+  const { currentUser } = useFirebaseAuth();
 
   const isActive = (path: string) => {
     return location.pathname === path || location.pathname.startsWith(`${path}/`);
@@ -26,6 +29,26 @@ const AdminLayout: React.FC = () => {
           </Navbar.Brand>
           <div className="d-flex align-items-center">
             <ThemeToggle className="me-3" />
+            
+            {/* Dropdown del usuario */}
+            <Dropdown align="end" className="me-3">
+              <Dropdown.Toggle variant="outline-light" id="admin-user-dropdown">
+                <i className="bi bi-person-circle me-1"></i>
+                {currentUser?.displayName || 'Administrador'}
+              </Dropdown.Toggle>
+              
+              <Dropdown.Menu>
+                <Dropdown.Item as={Link} to="/admin/settings/profile">Mi Perfil</Dropdown.Item>
+                <Dropdown.Divider />
+                <Dropdown.Item as="div" className="p-0">
+                  <LogoutButton 
+                    variant="link" 
+                    className="text-danger w-100 text-start ps-3 py-2" 
+                  />
+                </Dropdown.Item>
+              </Dropdown.Menu>
+            </Dropdown>
+            
             <Navbar.Toggle
               aria-controls="sidebar-nav"
               onClick={() => setShowSidebar(true)}
@@ -76,6 +99,13 @@ const AdminLayout: React.FC = () => {
               <i className="bi bi-box-arrow-up-right me-2"></i>
               Ver Sitio Web
             </Nav.Link>
+            
+            <Nav.Link className="mt-auto mb-3">
+              <LogoutButton 
+                variant="outline-danger" 
+                className="w-100" 
+              />
+            </Nav.Link>
           </Nav>
         </div>
 
@@ -119,6 +149,17 @@ const AdminLayout: React.FC = () => {
               <Nav.Link as={Link} to="/admin/settings" onClick={closeSidebar} className={isActive('/admin/settings') ? 'active' : ''}>
                 <i className="bi bi-gear me-2"></i>
                 Configuración
+              </Nav.Link>
+              
+              <div className="sidebar-divider my-3"></div>
+              
+              <Nav.Link href="/" target="_blank" onClick={closeSidebar}>
+                <i className="bi bi-box-arrow-up-right me-2"></i>
+                Ver Sitio Web
+              </Nav.Link>
+              
+              <Nav.Link as="div" className="mt-3">
+                <LogoutButton variant="outline-danger" className="w-100" />
               </Nav.Link>
             </Nav>
           </Offcanvas.Body>

@@ -1,6 +1,6 @@
 // src/AppRoutes.tsx
 import React from 'react';
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { Routes, Route } from 'react-router-dom';
 
 // Layouts
 import AdminLayout from './common/components/layouts/AdminLayout';
@@ -12,7 +12,8 @@ import WebsiteLayout from './common/components/layouts/WebsiteLayout';
 import Home from './apps/website/pages/Home';
 import MovieDetail from './apps/website/pages/MovieDetail';
 import SeatSelection from './apps/website/pages/SeatSelection';
-import Login from './apps/website/pages/Login';
+import FirebaseLogin from './components/auth/FirebaseLogin';
+import FirebaseRegister from './components/auth/FirebaseRegister';
 import Payment from './apps/website/pages/Payment';
 
 // Admin Routes
@@ -37,76 +38,71 @@ import RegisterPage from './apps/website/pages/RegisterPage';
 import UserManagement from './apps/admin/pages/UserManagement';
 
 // Auth
-import { AuthProvider } from './auth/AuthContext';
-import ProtectedRoute from './auth/ProtectedRoute';
+import FirebaseProtectedRoute from './auth/FirebaseProtectedRoute';
 
 const AppRoutes: React.FC = () => {
   return (
-    <BrowserRouter>
-      <AuthProvider>
-        <Routes>
-          {/* Website Routes */}
-          <Route path="/" element={<WebsiteLayout />}>
-            <Route index element={<Home />} />
-            <Route path="movie/:id" element={<MovieDetail />} />
-            <Route path="seats/:showId" element={<SeatSelection />} />
-            <Route path="login" element={<Login />} />
-            <Route path="register" element={<RegisterPage />} />
-            <Route path="payment/:reservationId" element={
-              <ProtectedRoute>
-                <Payment />
-              </ProtectedRoute>
-            } />
-          </Route>
+    <Routes>
+      {/* Website Routes */}
+      <Route path="/" element={<WebsiteLayout />}>
+        <Route index element={<Home />} />
+        <Route path="movie/:id" element={<MovieDetail />} />
+        <Route path="seats/:showId" element={<SeatSelection />} />
+        <Route path="login" element={<FirebaseLogin />} />
+        <Route path="register" element={<FirebaseRegister />} />
+        <Route path="payment/:reservationId" element={
+          <FirebaseProtectedRoute>
+            <Payment />
+          </FirebaseProtectedRoute>
+        } />
+      </Route>
 
-          {/* Admin Routes */}
-          <Route
-            path="/admin"
-            element={
-              <ProtectedRoute requiredRole="ADMIN">
-                <AdminLayout />
-              </ProtectedRoute>
-            }
-          >
-            <Route index element={<Dashboard />} />
-            <Route path="movies" element={<MovieManagement />} />
-            <Route path="shows" element={<ShowManagement />} />
-            <Route path="products" element={<ProductManagement />} />
-            <Route path="users" element={<UserManagement />} />
-            <Route path="reports/sales" element={<ReportingSales />} />
-            <Route path="settings" element={<AdminSettings />} />
-          </Route>
+      {/* Admin Routes */}
+      <Route
+        path="/admin"
+        element={
+          <FirebaseProtectedRoute requiredRole="ADMIN">
+            <AdminLayout />
+          </FirebaseProtectedRoute>
+        }
+      >
+        <Route index element={<Dashboard />} />
+        <Route path="movies" element={<MovieManagement />} />
+        <Route path="shows" element={<ShowManagement />} />
+        <Route path="products" element={<ProductManagement />} />
+        <Route path="users" element={<UserManagement />} />
+        <Route path="reports/sales" element={<ReportingSales />} />
+        <Route path="settings" element={<AdminSettings />} />
+      </Route>
 
-          {/* POS Routes */}
-          <Route
-            path="/pos"
-            element={
-              <ProtectedRoute requiredRole={["ADMIN", "STAFF"]}>
-                <POSLayout />
-              </ProtectedRoute>
-            }
-          >
-            <Route index element={<POSHome />} />
-            <Route path="seats/:showId" element={<POSSeatSelection />} />
-            <Route path="products" element={<POSProducts />} />
-            <Route path="checkout" element={<POSCheckout />} />
-          </Route>
+      {/* POS Routes */}
+      <Route
+        path="/pos"
+        element={
+          <FirebaseProtectedRoute requiredRole={["ADMIN", "STAFF"]}>
+            <POSLayout />
+          </FirebaseProtectedRoute>
+        }
+      >
+        <Route index element={<POSHome />} />
+        <Route path="seats/:showId" element={<POSSeatSelection />} />
+        <Route path="products" element={<POSProducts />} />
+        <Route path="checkout" element={<POSCheckout />} />
+      </Route>
 
-          {/* Validator Routes */}
-          <Route
-            path="/validator"
-            element={
-              <ProtectedRoute requiredRole={["ADMIN", "STAFF"]}>
-                <ValidatorLayout />
-              </ProtectedRoute>
-            }
-          >
-            <Route index element={<ScanQR />} />
-            <Route path="settings" element={<ValidatorSettings />} />
-          </Route>
-        </Routes>
-      </AuthProvider>
-    </BrowserRouter>
+      {/* Validator Routes */}
+      <Route
+        path="/validator"
+        element={
+          <FirebaseProtectedRoute requiredRole={["ADMIN", "STAFF"]}>
+            <ValidatorLayout />
+          </FirebaseProtectedRoute>
+        }
+      >
+        <Route index element={<ScanQR />} />
+        <Route path="settings" element={<ValidatorSettings />} />
+      </Route>
+    </Routes>
   );
 };
 
