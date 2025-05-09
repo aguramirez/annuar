@@ -15,7 +15,7 @@ const Dashboard: React.FC = () => {
   // Fecha actual y hace 30 días
   const endDate = new Date().toISOString().split('T')[0];
   const startDate = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
-  const cinemaId = 'your-cinema-id'; // Esto debería venir de la configuración o contexto
+  const cinemaId = ''; // Esto debería venir de la configuración o contexto
 
   useEffect(() => {
     const fetchDashboardData = async () => {

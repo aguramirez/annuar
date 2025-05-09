@@ -21,7 +21,6 @@ interface User {
   uid: string;
   email: string | null;
   displayName: string | null;
-  photoURL: string | null;
   role: string;
 }
 
@@ -85,66 +84,55 @@ export const FirebaseAuthProvider: React.FC<AuthProviderProps> = ({ children }) 
         try {
           // Obtener token para validación con backend
           const idToken = await firebaseUser.getIdToken();
+          console.log('🔑 idToken:', idToken);
 
-          // Simulamos la respuesta del backend si estamos en desarrollo
-          // Esto es temporal para evitar problemas si el backend no funciona
+          // Verificar/crear usuario en el backend
+          const response = await axios.post('/api/auth/firebase-auth', {
+            firebaseToken: idToken
+          });
+
+          console.log('⬅️ Backend auth response:', response.data);
+
+          // Obtener información de usuario del backend, incluyendo rol
+          const userFromBackend = response.data.user;
+          console.log('👤 User data from backend:', JSON.stringify(userFromBackend, null, 2));
 
           let userRole = 'CUSTOMER'; // Rol por defecto
-          try {
-            // Verificar/crear usuario en el backend
-            const response = await axios.post('/api/auth/firebase-auth', {
-              firebaseToken: idToken
-            });
-
-            console.log('Backend auth response:', response.data);
-
-            // Obtener información de usuario del backend, incluyendo rol
-            const userFromBackend = response.data.user;
-            console.log('User data from backend:', JSON.stringify(userFromBackend, null, 2));
-
-            // Verificar diferentes formatos de rol
-            if (userFromBackend.role) {
-              userRole = userFromBackend.role;
-            } else if (userFromBackend.roles && Array.isArray(userFromBackend.roles)) {
-              // Si es un array de roles
-              const roles = userFromBackend.roles;
-              if (roles.includes('ADMIN') || roles.includes('ROLE_ADMIN')) {
-                userRole = 'ADMIN';
-              } else if (roles.includes('STAFF') || roles.includes('ROLE_STAFF')) {
-                userRole = 'STAFF';
-              }
-            } else if (userFromBackend.authorities && Array.isArray(userFromBackend.authorities)) {
-              // Formato común en Spring Security
-              const authorities = userFromBackend.authorities;
-              const adminAuthority = authorities.find((auth: any) =>
-                auth.authority === 'ADMIN' ||
-                auth.authority === 'ROLE_ADMIN' ||
-                auth === 'ADMIN' ||
-                auth === 'ROLE_ADMIN'
-              );
-              if (adminAuthority) userRole = 'ADMIN';
+          if (userFromBackend.role) {
+            userRole = userFromBackend.role;
+          } else if (userFromBackend.roles && Array.isArray(userFromBackend.roles)) {
+            const roles = userFromBackend.roles;
+            if (roles.includes('ADMIN') || roles.includes('ROLE_ADMIN')) {
+              userRole = 'ADMIN';
+            } else if (roles.includes('STAFF') || roles.includes('ROLE_STAFF')) {
+              userRole = 'STAFF';
             }
-
-            console.log('Rol determinado:', userRole);
-          } catch (backendError) {
-            console.error('Error con el backend:', backendError);
+          } else if (userFromBackend.authorities && Array.isArray(userFromBackend.authorities)) {
+            const authorities = userFromBackend.authorities;
+            const adminAuthority = authorities.find((auth: any) =>
+              auth.authority === 'ADMIN' ||
+              auth.authority === 'ROLE_ADMIN' ||
+              auth === 'ADMIN' ||
+              auth === 'ROLE_ADMIN'
+            );
+            if (adminAuthority) userRole = 'ADMIN';
           }
 
-          console.log('👤 Setting authenticated user with role:', userRole);
+          console.log('🛡️ Rol determinado:', userRole);
 
           // Crear usuario combinando datos de Firebase y backend
           const user: User = {
             uid: firebaseUser.uid,
             email: firebaseUser.email,
             displayName: firebaseUser.displayName,
-            photoURL: firebaseUser.photoURL,
             role: userRole
           };
 
           setCurrentUser(user);
-        } catch (err) {
-          console.error('Error procesando usuario autenticado:', err);
-          setCurrentUser(null);
+          console.log('✅ currentUser actualizado:', user);
+        } catch (backendError) {
+          console.error('❌ Error con el backend:', backendError);
+
         }
       } else {
         console.log('🚫 No authenticated user');
@@ -156,7 +144,7 @@ export const FirebaseAuthProvider: React.FC<AuthProviderProps> = ({ children }) 
 
     // Limpiar el observador cuando el componente se desmonte
     return () => {
-      console.log('Limpiando observador de autenticación');
+      console.log('🧹 Limpiando observador de autenticación');
       unsubscribe();
     };
   }, []);
@@ -256,7 +244,6 @@ export const FirebaseAuthProvider: React.FC<AuthProviderProps> = ({ children }) 
         setCurrentUser({
           ...currentUser,
           displayName,
-          photoURL: photoURL || currentUser.photoURL
         });
       }
     } catch (err) {
