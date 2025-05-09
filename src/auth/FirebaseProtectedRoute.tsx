@@ -15,8 +15,17 @@ const FirebaseProtectedRoute: React.FC<ProtectedRouteProps> = ({
   const { currentUser, isAuthenticated, isLoading } = useFirebaseAuth();
   const location = useLocation();
   
+  // Log para depuración
+  console.log('🔒 FirebaseProtectedRoute:', {
+    path: location.pathname,
+    isAuthenticated,
+    isLoading,
+    currentUser,
+    requiredRole
+  });
+  
+  // Mientras se carga la autenticación, mostrar un spinner
   if (isLoading) {
-    // Show loading spinner while checking authentication
     return (
       <div className="d-flex justify-content-center align-items-center" style={{ height: '100vh' }}>
         <div className="spinner-border text-primary" role="status">
@@ -26,29 +35,39 @@ const FirebaseProtectedRoute: React.FC<ProtectedRouteProps> = ({
     );
   }
   
-  // If not authenticated, redirect to login with the current location
-  if (!isAuthenticated) {
+  // Si no está autenticado, redirigir a login
+  if (!isAuthenticated || !currentUser) {
+    console.log('🚪 No autenticado, redirigiendo a login');
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
   
-  // If role check is required
-  if (requiredRole && currentUser) {
-    const roles = Array.isArray(requiredRole) ? requiredRole : [requiredRole];
+  // Si requiere un rol específico
+  if (requiredRole) {
+    // Convertir a array si es un solo string
+    const requiredRoles = Array.isArray(requiredRole) ? requiredRole : [requiredRole];
     
-    if (!roles.includes(currentUser.role)) {
-      // Redirect based on user role if they don't have required role
-      switch (currentUser.role) {
-        case 'ADMIN':
-          return <Navigate to="/admin" replace />;
-        case 'STAFF':
-          return <Navigate to="/pos" replace />;
-        default:
-          return <Navigate to="/" replace />;
-      }
+    // Asegurarnos de que la comparación sea case-insensitive
+    const userRole = (currentUser.role || '').toUpperCase();
+    const normalizedRequiredRoles = requiredRoles.map(role => (role || '').toUpperCase());
+    
+    console.log('🔑 Verificación de rol:', {
+      userRole,
+      normalizedRequiredRoles,
+      hasRequiredRole: normalizedRequiredRoles.includes(userRole)
+    });
+    
+    // Si el usuario no tiene el rol requerido
+    if (!normalizedRequiredRoles.includes(userRole)) {
+      console.log('⛔ El usuario no tiene el rol requerido');
+      
+      // IMPORTANTE: No redirigir al usuario a una ruta donde también necesite el mismo rol
+      // Esto evita ciclos de redirección
+      return <Navigate to="/" replace />;
     }
   }
   
-  // If authenticated and has required role, render children
+  // Si pasa todas las verificaciones, mostrar el contenido protegido
+  console.log('✅ Acceso concedido a ruta protegida');
   return <>{children}</>;
 };
 

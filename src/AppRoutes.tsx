@@ -39,6 +39,7 @@ import UserManagement from './apps/admin/pages/UserManagement';
 
 // Auth
 import FirebaseProtectedRoute from './auth/FirebaseProtectedRoute';
+import DebugAuth from './apps/website/pages/DebugAuth';
 
 const AppRoutes: React.FC = () => {
   return (
@@ -102,6 +103,9 @@ const AppRoutes: React.FC = () => {
         <Route index element={<ScanQR />} />
         <Route path="settings" element={<ValidatorSettings />} />
       </Route>
+
+
+      <Route path="/debug-auth" element={<DebugAuth />} />
     </Routes>
   );
 };

@@ -10,12 +10,10 @@ import {
   signOut,
   onAuthStateChanged,
   sendPasswordResetEmail,
-  confirmPasswordReset,
   updateProfile,
   AuthError
 } from 'firebase/auth';
 import { auth } from '../config/firebase';
-import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
 // Tipos
@@ -38,11 +36,11 @@ interface FirebaseAuthContextType {
   signUpWithEmail: (email: string, password: string, name: string) => Promise<void>;
   resetPassword: (email: string) => Promise<void>;
   updateUserProfile: (displayName: string, photoURL?: string) => Promise<void>;
-  logout: () => Promise<void>; // Retorno correcto: Promise<void>
+  logout: () => Promise<void>;
   clearError: () => void;
 }
 
-const FirebaseAuthContext = createContext<FirebaseAuthContextType | undefined>(undefined);
+export const FirebaseAuthContext = createContext<FirebaseAuthContextType | undefined>(undefined);
 
 // Hook personalizado
 export const useFirebaseAuth = () => {
@@ -61,27 +59,78 @@ export const FirebaseAuthProvider: React.FC<AuthProviderProps> = ({ children }) 
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const navigate = useNavigate();
 
   // Configurar providers
   const googleProvider = new GoogleAuthProvider();
   const facebookProvider = new FacebookAuthProvider();
 
+  // Para debugging - guardar el estado en sessionStorage para ver si persiste
+  useEffect(() => {
+    if (currentUser) {
+      sessionStorage.setItem('DEBUG_currentUser', JSON.stringify(currentUser));
+    } else {
+      sessionStorage.removeItem('DEBUG_currentUser');
+    }
+  }, [currentUser]);
+
   // Observador del estado de autenticación
   useEffect(() => {
+    console.log('Configurando observador de autenticación');
+    setIsLoading(true);
+
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+      console.log('🔥 Firebase Auth State Changed:', { firebaseUser });
+
       if (firebaseUser) {
         try {
           // Obtener token para validación con backend
           const idToken = await firebaseUser.getIdToken();
 
-          // Verificar/crear usuario en el backend
-          const response = await axios.post('/api/auth/firebase-auth', {
-            firebaseToken: idToken
-          });
+          // Simulamos la respuesta del backend si estamos en desarrollo
+          // Esto es temporal para evitar problemas si el backend no funciona
 
-          // Obtener información de usuario del backend, incluyendo rol
-          const userFromBackend = response.data.user;
+          let userRole = 'CUSTOMER'; // Rol por defecto
+          try {
+            // Verificar/crear usuario en el backend
+            const response = await axios.post('/api/auth/firebase-auth', {
+              firebaseToken: idToken
+            });
+
+            console.log('Backend auth response:', response.data);
+
+            // Obtener información de usuario del backend, incluyendo rol
+            const userFromBackend = response.data.user;
+            console.log('User data from backend:', JSON.stringify(userFromBackend, null, 2));
+
+            // Verificar diferentes formatos de rol
+            if (userFromBackend.role) {
+              userRole = userFromBackend.role;
+            } else if (userFromBackend.roles && Array.isArray(userFromBackend.roles)) {
+              // Si es un array de roles
+              const roles = userFromBackend.roles;
+              if (roles.includes('ADMIN') || roles.includes('ROLE_ADMIN')) {
+                userRole = 'ADMIN';
+              } else if (roles.includes('STAFF') || roles.includes('ROLE_STAFF')) {
+                userRole = 'STAFF';
+              }
+            } else if (userFromBackend.authorities && Array.isArray(userFromBackend.authorities)) {
+              // Formato común en Spring Security
+              const authorities = userFromBackend.authorities;
+              const adminAuthority = authorities.find((auth: any) =>
+                auth.authority === 'ADMIN' ||
+                auth.authority === 'ROLE_ADMIN' ||
+                auth === 'ADMIN' ||
+                auth === 'ROLE_ADMIN'
+              );
+              if (adminAuthority) userRole = 'ADMIN';
+            }
+
+            console.log('Rol determinado:', userRole);
+          } catch (backendError) {
+            console.error('Error con el backend:', backendError);
+          }
+
+          console.log('👤 Setting authenticated user with role:', userRole);
 
           // Crear usuario combinando datos de Firebase y backend
           const user: User = {
@@ -89,32 +138,27 @@ export const FirebaseAuthProvider: React.FC<AuthProviderProps> = ({ children }) 
             email: firebaseUser.email,
             displayName: firebaseUser.displayName,
             photoURL: firebaseUser.photoURL,
-            role: userFromBackend.role || 'CUSTOMER' // Rol predeterminado
+            role: userRole
           };
 
           setCurrentUser(user);
         } catch (err) {
-          console.error('Error autenticando con el backend:', err);
+          console.error('Error procesando usuario autenticado:', err);
           setCurrentUser(null);
-
-          // Si hay error en la comunicación con el backend, mantener sesión de Firebase
-          // pero establecer un rol predeterminado
-          setCurrentUser({
-            uid: firebaseUser.uid,
-            email: firebaseUser.email,
-            displayName: firebaseUser.displayName,
-            photoURL: firebaseUser.photoURL,
-            role: 'CUSTOMER' // Rol predeterminado en caso de error
-          });
         }
       } else {
+        console.log('🚫 No authenticated user');
         setCurrentUser(null);
       }
+
       setIsLoading(false);
     });
 
     // Limpiar el observador cuando el componente se desmonte
-    return () => unsubscribe();
+    return () => {
+      console.log('Limpiando observador de autenticación');
+      unsubscribe();
+    };
   }, []);
 
   // Iniciar sesión con email y contraseña
@@ -224,7 +268,7 @@ export const FirebaseAuthProvider: React.FC<AuthProviderProps> = ({ children }) 
   const logout = async (): Promise<void> => {
     try {
       setIsLoading(true);
-      
+
       // Primero, notificar al backend
       try {
         await axios.post('/api/auth/logout');
@@ -232,21 +276,17 @@ export const FirebaseAuthProvider: React.FC<AuthProviderProps> = ({ children }) 
         // Si hay un error en la comunicación con el backend, continuamos con el logout local
         console.warn('No se pudo notificar al backend del logout:', err);
       }
-      
+
       // Cerrar sesión en Firebase
       await signOut(auth);
-      
+
       // Limpiar estado local
       setCurrentUser(null);
-      
-      // Redireccionar a la página de login
-      navigate('/login');
-      
+
       // No retornamos nada (void)
     } catch (err) {
       console.error('Error en logout:', err);
       setError('Error al cerrar sesión. Por favor intenta nuevamente.');
-      // No retornamos nada (void)
     } finally {
       setIsLoading(false);
     }

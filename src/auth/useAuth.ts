@@ -1,12 +1,12 @@
 // src/auth/useAuth.ts
 import { useContext } from 'react';
-import { AuthContext } from './AuthProvider';
+import { FirebaseAuthContext } from './FirebaseAuthContext';
 
 export const useAuth = () => {
-  const context = useContext(AuthContext);
+  const context = useContext(FirebaseAuthContext);
   
   if (context === undefined) {
-    throw new Error('useAuth debe ser usado dentro de un AuthProvider');
+    throw new Error('useAuth debe ser usado dentro de un FirebaseAuthProvider');
   }
   
   return context;

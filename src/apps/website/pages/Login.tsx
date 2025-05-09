@@ -1,8 +1,8 @@
 // src/apps/website/pages/Login.tsx
 import React, { useState, useEffect } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { Container, Row, Col, Card, Form, Button, Alert, Spinner } from 'react-bootstrap';
-import { useAuth } from '../../../auth/AuthContext';
+import { useFirebaseAuth } from '../../../auth/FirebaseAuthContext';
 import GoogleLoginButton from '../../../components/auth/GoogleLoginButton';
 
 const Login: React.FC = () => {
@@ -11,7 +11,7 @@ const Login: React.FC = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   
-  const { login, error, isAuthenticated, isLoading } = useAuth();
+  const { signInWithEmail, error, isAuthenticated, isLoading } = useFirebaseAuth();
   const navigate = useNavigate();
   const location = useLocation();
   
@@ -38,10 +38,10 @@ const Login: React.FC = () => {
     setErrorMessage(null);
     
     try {
-      // Use the login function from AuthContext
-      await login(email, password);
+      // Use the login function from FirebaseAuthContext
+      await signInWithEmail(email, password);
     } catch (error) {
-      // Error handling is done in the AuthContext
+      // Error handling is done in the FirebaseAuthContext
     } finally {
       setIsSubmitting(false);
     }
@@ -98,13 +98,12 @@ const Login: React.FC = () => {
                     required
                   />
                   <div className="d-flex justify-content-end mt-1">
-                    <Button 
-                      variant="link" 
-                      className="p-0 text-decoration-none"
-                      onClick={() => navigate('/forgot-password')}
+                    <Link 
+                      to="/reset-password"
+                      className="text-decoration-none"
                     >
                       ¿Olvidaste tu contraseña?
-                    </Button>
+                    </Link>
                   </div>
                 </Form.Group>
                 
@@ -135,13 +134,12 @@ const Login: React.FC = () => {
               <div className="text-center mt-4">
                 <p className="mb-0">
                   ¿No tienes una cuenta?{' '}
-                  <Button
-                    variant="link"
-                    className="p-0 text-decoration-none"
-                    onClick={() => navigate('/register')}
+                  <Link 
+                    to="/register"
+                    className="text-decoration-none"
                   >
                     Regístrate aquí
-                  </Button>
+                  </Link>
                 </p>
               </div>
             </Card.Body>

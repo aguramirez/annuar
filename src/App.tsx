@@ -1,4 +1,4 @@
-// src/App.tsx
+// src/App.tsx (verificación)
 import React from 'react';
 import { BrowserRouter } from 'react-router-dom';
 import 'bootstrap/dist/css/bootstrap.min.css';
@@ -7,8 +7,8 @@ import './App.css';
 import AppRoutes from './AppRoutes';
 import { ThemeProvider } from './common/context/ThemeContext';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import FirebaseAuthProvider from './auth/FirebaseAuthContext';
+import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 
 // Create a client
 const queryClient = new QueryClient({
