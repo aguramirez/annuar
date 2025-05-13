@@ -1,9 +1,33 @@
-// src/apps/website/pages/MovieDetail.tsx
-import React, { useEffect, useState } from 'react';
+// src/apps/website/pages/MovieDetail.tsx (Updated version)
+import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Container, Row, Col, Card, Button, Badge, Spinner, Tab, Tabs } from 'react-bootstrap';
-import movieService, { Movie } from '../../../common/services/movieService';
-import showService, { Show } from '../../../common/services/showService';
+import { Container, Row, Col, Card, Button, Badge, Spinner, Alert, Tab, Tabs } from 'react-bootstrap';
+import { useTheme } from '../../../common/context/ThemeContext';
+
+// Interfaz para la estructura de película en movies.json
+interface Movie {
+  id: number;
+  title: string;
+  director: string;
+  genre: string[];
+  duration: number;
+  releaseDate: string;
+  poster: string;
+  heroImage: string;
+  synopsis: string;
+  trailerUrl: string;
+  rating: number;
+  showtimes: {
+    date: string;
+    times: {
+      id?: string;
+      time: string;
+      room?: string;
+      available?: number;
+      total?: number;
+    }[];
+  }[];
+}
 
 interface MovieDetailParams {
   id: string;
@@ -11,68 +35,54 @@ interface MovieDetailParams {
 }
 
 const MovieDetail: React.FC = () => {
+  const { theme } = useTheme();
   const { id } = useParams<MovieDetailParams>();
   const navigate = useNavigate();
   
   const [movie, setMovie] = useState<Movie | null>(null);
-  const [shows, setShows] = useState<Show[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedDate, setSelectedDate] = useState<string>('');
 
   useEffect(() => {
-    const fetchMovieAndShows = async () => {
+    const fetchMovie = async () => {
       if (!id) return;
       
       try {
         setLoading(true);
-        // Obtener detalles de la película
-        const movieData = await movieService.getMovie(id);
-        setMovie(movieData);
         
-        // Obtener funciones para esta película
-        const showsData = await showService.getShowsForMovie(id);
-        setShows(showsData);
+        // Cargar datos del archivo JSON local
+        const moviesData = await import('../../../data/movies.json');
+        const allMovies: Movie[] = moviesData.movies;
         
-        // Establecer la primera fecha disponible como seleccionada
-        if (showsData.length > 0) {
-          const dates = [...new Set(showsData.map(show => 
-            new Date(show.startTime).toISOString().split('T')[0]
-          ))];
-          if (dates.length > 0) {
-            setSelectedDate(dates[0]);
+        // Buscar la película por ID
+        const movieData = allMovies.find(movie => movie.id === parseInt(id));
+        
+        if (movieData) {
+          setMovie(movieData);
+          
+          // Establecer la primera fecha disponible como seleccionada
+          if (movieData.showtimes.length > 0) {
+            setSelectedDate(movieData.showtimes[0].date);
           }
+          
+          setError(null);
+        } else {
+          setError('No se encontró la película solicitada.');
         }
-        
-        setError(null);
       } catch (err) {
-        console.error('Error fetching movie and shows:', err);
-        setError('No se pudieron cargar los datos. Por favor, intenta de nuevo más tarde.');
+        console.error('Error fetching movie details:', err);
+        setError('No se pudieron cargar los detalles de la película. Por favor, intenta de nuevo más tarde.');
       } finally {
         setLoading(false);
       }
     };
 
-    fetchMovieAndShows();
+    fetchMovie();
   }, [id]);
 
   const handleSelectShow = (showId: string) => {
     navigate(`/seats/${showId}`);
-  };
-
-  // Agrupar funciones por fecha
-  const groupShowsByDate = () => {
-    const grouped: Record<string, Show[]> = {};
-    
-    shows.forEach(show => {
-      const date = new Date(show.startTime).toISOString().split('T')[0];
-      if (!grouped[date]) {
-        grouped[date] = [];
-      }
-      grouped[date].push(show);
-    });
-    
-    return grouped;
   };
 
   // Formatear fecha para mostrar
@@ -86,12 +96,17 @@ const MovieDetail: React.FC = () => {
     return new Date(dateString).toLocaleDateString('es-ES', options);
   };
 
-  // Formatear hora para mostrar
-  const formatTime = (dateTimeString: string) => {
-    return new Date(dateTimeString).toLocaleTimeString('es-ES', { 
-      hour: '2-digit', 
-      minute: '2-digit' 
-    });
+  // Calcular disponibilidad de asientos en porcentaje (para el indicador)
+  const calculateAvailabilityPercentage = (available?: number, total?: number) => {
+    if (available === undefined || total === undefined || total === 0) return 100;
+    return Math.round((available / total) * 100);
+  };
+
+  // Determinar la clase para el indicador de disponibilidad
+  const getAvailabilityStatusClass = (percentage: number) => {
+    if (percentage >= 70) return 'success';
+    if (percentage >= 30) return 'warning';
+    return 'danger';
   };
 
   if (loading) {
@@ -107,7 +122,7 @@ const MovieDetail: React.FC = () => {
   if (error) {
     return (
       <Container className="py-5">
-        <div className="alert alert-danger">{error}</div>
+        <Alert variant="danger">{error}</Alert>
       </Container>
     );
   }
@@ -115,99 +130,179 @@ const MovieDetail: React.FC = () => {
   if (!movie) {
     return (
       <Container className="py-5">
-        <div className="alert alert-warning">No se encontró la película solicitada.</div>
+        <Alert variant="warning">No se encontró la película solicitada.</Alert>
       </Container>
     );
   }
 
-  const groupedShows = groupShowsByDate();
-  const availableDates = Object.keys(groupedShows).sort();
+  // Obtener las funciones para la fecha seleccionada
+  const selectedShowtimes = selectedDate 
+    ? movie.showtimes.find(st => st.date === selectedDate)?.times || []
+    : [];
 
   return (
-    <Container className="py-5">
-      <Row>
-        <Col md={4} className="mb-4">
+    <Container className="movie-detail-container py-5">
+      <Row className="mb-5">
+        <Col md={4}>
           <img 
-            src={movie.posterUrl || 'https://via.placeholder.com/300x450'} 
+            src={movie.poster} 
             alt={movie.title} 
-            className="img-fluid rounded"
+            className="movie-poster img-fluid rounded shadow mb-4"
           />
         </Col>
         <Col md={8}>
-          <h1 className="mb-3">{movie.title}</h1>
-          <div className="mb-3">
-            <Badge bg="primary" className="me-2">{movie.rating}</Badge>
-            <Badge bg="secondary" className="me-2">{movie.genre}</Badge>
-            <span>{movie.durationMinutes} minutos</span>
-          </div>
-          <p className="lead mb-4">{movie.synopsis}</p>
-          <div className="movie-details mb-4">
-            <p><strong>Director:</strong> {movie.director}</p>
-            <p><strong>Reparto:</strong> {movie.cast}</p>
-            <p><strong>Estreno:</strong> {new Date(movie.releaseDate).toLocaleDateString()}</p>
-            <p>
-              <strong>Idioma:</strong> {movie.language}
-              {movie.is3d && <Badge bg="info" className="ms-2">3D</Badge>}
-              {movie.isSubtitled && <Badge bg="dark" className="ms-2">Subtitulada</Badge>}
-            </p>
+          <h1 className="movie-title mb-3">{movie.title}</h1>
+          
+          <div className="movie-meta mb-4">
+            <Badge bg="primary" className="me-2">{movie.rating.toFixed(1)} ★</Badge>
+            {movie.genre.map((genre, index) => (
+              <Badge key={index} bg="secondary" className="me-2">{genre}</Badge>
+            ))}
+            <span className="ms-2">{movie.duration} minutos</span>
           </div>
           
-          {movie.trailerUrl && (
-            <div className="mb-4">
-              <a href={movie.trailerUrl} target="_blank" rel="noopener noreferrer" className="btn btn-outline-primary">
-                <i className="bi bi-play-circle me-2"></i>
-                Ver Trailer
-              </a>
-            </div>
-          )}
+          <div className="movie-synopsis mb-4">
+            <h5>Sinopsis</h5>
+            <p>{movie.synopsis}</p>
+          </div>
+          
+          <div className="movie-details mb-4">
+            <p><strong>Director:</strong> {movie.director}</p>
+            <p><strong>Estreno:</strong> {formatDate(movie.releaseDate)}</p>
+          </div>
+          
+          <div className="movie-actions">
+            <a 
+              href={movie.trailerUrl} 
+              target="_blank" 
+              rel="noopener noreferrer" 
+              className="btn btn-outline-primary me-3"
+            >
+              <i className="bi bi-play-circle me-2"></i>
+              Ver Trailer
+            </a>
+          </div>
         </Col>
       </Row>
       
-      <hr className="my-4" />
-      
-      <h2 className="mb-4">Funciones Disponibles</h2>
-      
-      {availableDates.length > 0 ? (
-        <>
-          <div className="date-selector mb-4">
-            <Tabs
-              activeKey={selectedDate}
-              onSelect={(date) => setSelectedDate(date || '')}
-              className="mb-3"
-            >
-              {availableDates.map(date => (
-                <Tab 
-                  key={date} 
-                  eventKey={date} 
-                  title={formatDate(date)}
-                />
-              ))}
-            </Tabs>
-          </div>
-          
-          <Card>
-            <Card.Body>
-              <h5 className="mb-3">Horarios para {formatDate(selectedDate)}</h5>
-              <div className="d-flex flex-wrap">
-                {selectedDate && groupedShows[selectedDate]?.map(show => (
-                  <Button
-                    key={show.id}
-                    variant="outline-primary"
-                    className="me-2 mb-2"
-                    onClick={() => handleSelectShow(show.id)}
-                  >
-                    {formatTime(show.startTime)}
-                    {show.is3d && <span className="ms-1">3D</span>}
-                  </Button>
+      <Card className="mb-5">
+        <Card.Header>
+          <h3 className="mb-0">Funciones Disponibles</h3>
+        </Card.Header>
+        <Card.Body>
+          {movie.showtimes.length > 0 ? (
+            <>
+              {/* Tabs de fechas */}
+              <Tabs
+                activeKey={selectedDate}
+                onSelect={(date) => date && setSelectedDate(date)}
+                className="mb-4"
+              >
+                {movie.showtimes.map(showtime => (
+                  <Tab 
+                    key={showtime.date} 
+                    eventKey={showtime.date} 
+                    title={formatDate(showtime.date)}
+                  />
                 ))}
-              </div>
-            </Card.Body>
-          </Card>
-        </>
-      ) : (
-        <div className="alert alert-info">
-          No hay funciones disponibles para esta película en este momento.
-        </div>
+              </Tabs>
+              
+              {/* Horarios para la fecha seleccionada */}
+              <Row xs={2} md={3} lg={4} className="g-3">
+                {selectedShowtimes.map((showtime, index) => {
+                  // Asignar ID si no existe (para navigación)
+                  const showtimeId = showtime.id || `${movie.id}-${selectedDate}-${index}`;
+                  
+                  // Calcular disponibilidad para mostrar en UI
+                  const availabilityPercentage = calculateAvailabilityPercentage(
+                    showtime.available, 
+                    showtime.total
+                  );
+                  const statusClass = getAvailabilityStatusClass(availabilityPercentage);
+                  
+                  return (
+                    <Col key={showtimeId}>
+                      <Card 
+                        className="showtime-card h-100"
+                        onClick={() => handleSelectShow(showtimeId)}
+                      >
+                        <Card.Body className="p-3">
+                          <div className="d-flex justify-content-between align-items-center mb-2">
+                            <h5 className="mb-0">{showtime.time}</h5>
+                            <Badge bg={statusClass}>
+                              {availabilityPercentage}%
+                            </Badge>
+                          </div>
+                          
+                          <div className="text-muted mb-2">{showtime.room || 'Sala Principal'}</div>
+                          
+                          <div className="progress" style={{ height: '10px' }}>
+                            <div 
+                              className={`progress-bar bg-${statusClass}`} 
+                              role="progressbar" 
+                              style={{ width: `${availabilityPercentage}%` }}
+                              aria-valuenow={availabilityPercentage}
+                              aria-valuemin={0}
+                              aria-valuemax={100}
+                            ></div>
+                          </div>
+                          
+                          <div className="d-flex justify-content-between align-items-center mt-3">
+                            <small className="text-muted">
+                              {showtime.available !== undefined && showtime.total !== undefined ? 
+                                `${showtime.available} de ${showtime.total} asientos` : 
+                                'Asientos disponibles'
+                              }
+                            </small>
+                            <Button 
+                              variant="primary" 
+                              size="sm"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleSelectShow(showtimeId);
+                              }}
+                            >
+                              Comprar
+                            </Button>
+                          </div>
+                        </Card.Body>
+                      </Card>
+                    </Col>
+                  );
+                })}
+              </Row>
+              
+              {selectedShowtimes.length === 0 && (
+                <Alert variant="info">
+                  No hay funciones disponibles para la fecha seleccionada.
+                </Alert>
+              )}
+            </>
+          ) : (
+            <Alert variant="info">
+              No hay funciones programadas para esta película en este momento.
+            </Alert>
+          )}
+        </Card.Body>
+      </Card>
+      
+      {movie.trailerUrl && (
+        <Card>
+          <Card.Header>
+            <h3 className="mb-0">Trailer</h3>
+          </Card.Header>
+          <Card.Body>
+            <div className="trailer-container mb-0">
+              <iframe
+                src={movie.trailerUrl}
+                title={`Trailer de ${movie.title}`}
+                frameBorder="0"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+              ></iframe>
+            </div>
+          </Card.Body>
+        </Card>
       )}
     </Container>
   );

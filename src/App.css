@@ -2723,3 +2723,195 @@ h1, h2, h3, h4, h5, h6 {
     font-size: 0.75rem;
   }
 }
+
+/* Additional CSS for new components - add to App.css */
+
+/* Candy Store styles */
+.product-card {
+  transition: var(--transition);
+  border: none;
+  border-radius: var(--border-radius);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+}
+
+.product-card:hover {
+  transform: translateY(-5px);
+  box-shadow: var(--shadow-md);
+}
+
+.product-image {
+  transition: transform 0.5s ease;
+}
+
+.product-card:hover .product-image {
+  transform: scale(1.05);
+}
+
+.popular-badge {
+  position: absolute;
+  top: -10px;
+  left: 10px;
+  z-index: 2;
+  padding: 0.3rem 0.6rem;
+  font-weight: 600;
+  font-size: 0.8rem;
+}
+
+.discount-badge {
+  font-weight: 600;
+  padding: 0.3rem 0.6rem;
+}
+
+.premium-badge {
+  font-size: 0.75rem;
+  font-weight: 600;
+  display: inline-block;
+}
+
+.premium-nav-item {
+  background-color: rgba(255, 193, 7, 0.1);
+}
+
+/* Subscription page styles */
+.benefit-card {
+  transition: var(--transition);
+  border: none;
+  border-radius: var(--border-radius);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+}
+
+.benefit-card:hover {
+  transform: translateY(-5px);
+  box-shadow: var(--shadow-md);
+}
+
+.plan-card {
+  transition: var(--transition);
+  cursor: pointer;
+  border: 2px solid transparent;
+  border-radius: var(--border-radius);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+}
+
+.plan-card:hover, .plan-card.selected {
+  transform: translateY(-5px);
+  box-shadow: var(--shadow-md);
+}
+
+.plan-card.selected {
+  border-color: var(--primary-color);
+}
+
+.price-container {
+  position: relative;
+}
+
+.current-price {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--text-color);
+}
+
+.current-price .period {
+  font-size: 1rem;
+  font-weight: 400;
+  color: var(--text-secondary);
+}
+
+.original-price {
+  font-size: 1.2rem;
+}
+
+/* POS styles */
+.pos-product-card {
+  cursor: pointer;
+  transition: var(--transition);
+  border: none;
+  border-radius: var(--border-radius);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+}
+
+.pos-product-card:hover {
+  transform: translateY(-5px);
+  box-shadow: var(--shadow-md);
+}
+
+.pos-cart-card {
+  position: sticky;
+  top: 80px;
+}
+
+.showtime-card {
+  cursor: pointer;
+  transition: var(--transition);
+  border: none;
+  border-radius: var(--border-radius);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+}
+
+.showtime-card:hover {
+  transform: translateY(-5px);
+  box-shadow: var(--shadow-md);
+}
+
+/* Validator styles */
+.camera-container {
+  width: 100%;
+  height: 400px;
+  background-color: #000;
+  border-radius: var(--border-radius);
+  overflow: hidden;
+}
+
+.scanner-overlay {
+  position: relative;
+}
+
+.scanner-target {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 200px;
+  height: 200px;
+  transform: translate(-50%, -50%);
+  border: 2px solid var(--primary-color);
+  border-radius: 10px;
+}
+
+.scanner-line {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 2px;
+  width: 100%;
+  background-color: var(--primary-color);
+  animation: scan 2s linear infinite;
+}
+
+@keyframes scan {
+  0% {
+    top: 0;
+  }
+  50% {
+    top: 100%;
+  }
+  100% {
+    top: 0;
+  }
+}
+
+.validation-status-card {
+  border: none;
+  border-radius: var(--border-radius);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+}
+
+.validation-status-item {
+  padding: 0.5rem 0;
+}

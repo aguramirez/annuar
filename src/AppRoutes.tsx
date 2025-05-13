@@ -1,4 +1,4 @@
-// src/AppRoutes.tsx
+// src/AppRoutes.tsx (Updated version)
 import React from 'react';
 import { Routes, Route } from 'react-router-dom';
 
@@ -15,6 +15,9 @@ import SeatSelection from './apps/website/pages/SeatSelection';
 import FirebaseLogin from './components/auth/FirebaseLogin';
 import FirebaseRegister from './components/auth/FirebaseRegister';
 import Payment from './apps/website/pages/Payment';
+import CandyStore from './apps/website/pages/CandyStore';
+import CandyCheckout from './apps/website/pages/CandyCheckout';
+import Subscription from './apps/website/pages/Subscription';
 
 // Admin Routes
 import Dashboard from './apps/admin/pages/Dashboard';
@@ -23,6 +26,7 @@ import ShowManagement from './apps/admin/pages/ShowManagement';
 import ProductManagement from './apps/admin/pages/ProductManagement';
 import ReportingSales from './apps/admin/pages/ReportingSales';
 import AdminSettings from './apps/admin/pages/AdminSettings';
+import UserManagement from './apps/admin/pages/UserManagement';
 
 // POS Routes
 import POSHome from './apps/pos/pages/POSHome';
@@ -34,11 +38,7 @@ import POSCheckout from './apps/pos/pages/POSCheckout';
 import ScanQR from './apps/validator/pages/ScanQR';
 import ValidatorSettings from './apps/validator/pages/ValidatorSettings';
 
-import RegisterPage from './apps/website/pages/RegisterPage';
-import UserManagement from './apps/admin/pages/UserManagement';
-
-// Auth
-import FirebaseProtectedRoute from './auth/FirebaseProtectedRoute';
+// Other
 import DebugAuth from './apps/website/pages/DebugAuth';
 
 const AppRoutes: React.FC = () => {
@@ -51,22 +51,20 @@ const AppRoutes: React.FC = () => {
         <Route path="seats/:showId" element={<SeatSelection />} />
         <Route path="login" element={<FirebaseLogin />} />
         <Route path="register" element={<FirebaseRegister />} />
-        <Route path="payment/:reservationId" element={
-          <FirebaseProtectedRoute>
-            <Payment />
-          </FirebaseProtectedRoute>
-        } />
+        
+        {/* New Candy Store Routes */}
+        <Route path="candy" element={<CandyStore />} />
+        <Route path="candy-checkout" element={<CandyCheckout />} />
+        
+        {/* Premium Subscription Route */}
+        <Route path="subscription" element={<Subscription />} />
+        
+        {/* Payment Routes */}
+        <Route path="payment/:reservationId" element={<Payment />} />
       </Route>
 
       {/* Admin Routes */}
-      <Route
-        path="/admin"
-        element={
-          <FirebaseProtectedRoute requiredRole="ADMIN">
-            <AdminLayout />
-          </FirebaseProtectedRoute>
-        }
-      >
+      <Route path="/admin" element={<AdminLayout />}>
         <Route index element={<Dashboard />} />
         <Route path="movies" element={<MovieManagement />} />
         <Route path="shows" element={<ShowManagement />} />
@@ -77,14 +75,7 @@ const AppRoutes: React.FC = () => {
       </Route>
 
       {/* POS Routes */}
-      <Route
-        path="/pos"
-        element={
-          <FirebaseProtectedRoute requiredRole={["ADMIN", "STAFF"]}>
-            <POSLayout />
-          </FirebaseProtectedRoute>
-        }
-      >
+      <Route path="/pos" element={<POSLayout />}>
         <Route index element={<POSHome />} />
         <Route path="seats/:showId" element={<POSSeatSelection />} />
         <Route path="products" element={<POSProducts />} />
@@ -92,19 +83,12 @@ const AppRoutes: React.FC = () => {
       </Route>
 
       {/* Validator Routes */}
-      <Route
-        path="/validator"
-        element={
-          <FirebaseProtectedRoute requiredRole={["ADMIN", "STAFF"]}>
-            <ValidatorLayout />
-          </FirebaseProtectedRoute>
-        }
-      >
+      <Route path="/validator" element={<ValidatorLayout />}>
         <Route index element={<ScanQR />} />
         <Route path="settings" element={<ValidatorSettings />} />
       </Route>
 
-
+      {/* Debug Route */}
       <Route path="/debug-auth" element={<DebugAuth />} />
     </Routes>
   );
