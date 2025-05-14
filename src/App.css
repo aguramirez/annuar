@@ -921,7 +921,7 @@ h1, h2, h3, h4, h5, h6 {
 
 /* Variables para tema oscuro */
 [data-theme='dark'] {
-  --primary-color: #380101;
+  --primary-color: #ad0000;
   --primary-hover: #FF4F76;
   --secondary-color: #af0505;
   --accent-color: #FFCA28;

@@ -1,0 +1,108 @@
+/* src/apps/website/pages/Profile.css */
+
+/* Avatar Styles */
+.avatar-container {
+  position: relative;
+  display: inline-block;
+}
+
+.avatar-circle {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background-color: var(--primary-color);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2rem;
+  font-weight: 600;
+  box-shadow: var(--shadow-sm);
+}
+
+.avatar-initials {
+  line-height: 1;
+}
+
+.premium-badge {
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  padding: 5px 8px;
+  border-radius: 12px;
+  font-size: 0.7rem;
+  box-shadow: var(--shadow-sm);
+}
+
+/* Order and Ticket Cards */
+.order-card {
+  transition: var(--transition);
+  border: none;
+  border-radius: var(--border-radius);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+}
+
+.order-card:hover {
+  box-shadow: var(--shadow-md);
+}
+
+.order-item {
+  padding: 8px;
+  border-radius: var(--border-radius-sm);
+  background-color: var(--background-color);
+}
+
+.free-ticket-card {
+  transition: var(--transition);
+  box-shadow: var(--shadow-sm);
+}
+
+.free-ticket-card:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-md);
+}
+
+/* Tab Navigation */
+.nav-tabs .nav-link {
+  color: var(--text-secondary);
+  font-weight: 500;
+  padding: 0.75rem 1rem;
+}
+
+.nav-tabs .nav-link.active {
+  color: var(--primary-color);
+  font-weight: 600;
+  background-color: transparent;
+  border-color: var(--border-color) var(--border-color) transparent;
+}
+
+/* Premium Benefits */
+.benefit-icon {
+  min-width: 40px;
+  display: flex;
+  align-items: center;
+}
+
+/* QR Code Modal */
+.qr-code-container {
+  padding: 20px;
+  background-color: var(--background-color);
+  border-radius: var(--border-radius);
+  box-shadow: var(--shadow-sm);
+  display: inline-block;
+}
+
+/* Responsive Styles */
+@media (max-width: 768px) {
+  .avatar-circle {
+    width: 60px;
+    height: 60px;
+    font-size: 1.5rem;
+  }
+  
+  .nav-tabs .nav-link {
+    padding: 0.5rem 0.75rem;
+    font-size: 0.9rem;
+  }
+}

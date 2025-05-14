@@ -1,4 +1,4 @@
-// src/AppRoutes.tsx (Updated version)
+// src/AppRoutes.tsx
 import React from 'react';
 import { Routes, Route } from 'react-router-dom';
 
@@ -12,12 +12,13 @@ import WebsiteLayout from './common/components/layouts/WebsiteLayout';
 import Home from './apps/website/pages/Home';
 import MovieDetail from './apps/website/pages/MovieDetail';
 import SeatSelection from './apps/website/pages/SeatSelection';
-import FirebaseLogin from './components/auth/FirebaseLogin';
-import FirebaseRegister from './components/auth/FirebaseRegister';
+import Login from './apps/website/pages/Login';
+import Register from './apps/website/pages/RegisterPage';
 import Payment from './apps/website/pages/Payment';
 import CandyStore from './apps/website/pages/CandyStore';
 import CandyCheckout from './apps/website/pages/CandyCheckout';
 import Subscription from './apps/website/pages/Subscription';
+import Profile from './apps/website/pages/Profile'; // Importamos el nuevo componente
 
 // Admin Routes
 import Dashboard from './apps/admin/pages/Dashboard';
@@ -49,8 +50,16 @@ const AppRoutes: React.FC = () => {
         <Route index element={<Home />} />
         <Route path="movie/:id" element={<MovieDetail />} />
         <Route path="seats/:showId" element={<SeatSelection />} />
-        <Route path="login" element={<FirebaseLogin />} />
-        <Route path="register" element={<FirebaseRegister />} />
+        <Route path="login" element={<Login />} />
+        <Route path="register" element={<Register />} />
+        
+        {/* Rutas de la Cartelera */}
+        <Route path="cartelera" element={<Home />} />
+        <Route path="proximos" element={<Home />} />
+        <Route path="promotions" element={<Home />} />
+        
+        {/* User Profile */}
+        <Route path="profile" element={<Profile />} />
         
         {/* New Candy Store Routes */}
         <Route path="candy" element={<CandyStore />} />

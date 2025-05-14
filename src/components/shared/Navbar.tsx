@@ -1,4 +1,4 @@
-// src/components/shared/Navbar.tsx (Updated version)
+// src/components/shared/Navbar.tsx
 import React, { useState, useEffect } from 'react';
 import { Navbar as BootstrapNavbar, Container, Nav, Button, NavDropdown, Badge } from 'react-bootstrap';
 import { Link, NavLink, useNavigate, useLocation } from 'react-router-dom';
@@ -7,9 +7,9 @@ import ThemeToggle from '../ThemeToggle';
 // Mock user data (normally would come from auth context)
 const mockUser = {
   isAuthenticated: true,
-  name: 'Usuario de Prueba',
+  name: 'Alberto Rodríguez',
   email: 'usuario@ejemplo.com',
-  isPremium: false // Toggle this to see Premium badge
+  isPremium: true // Cambiado a true para mostrar badge Premium
 };
 
 const Navbar: React.FC = () => {
@@ -48,6 +48,11 @@ const Navbar: React.FC = () => {
   // Register function
   const handleRegister = () => {
     navigate('/register');
+  };
+
+  // Función para navegar a una ruta
+  const navigateTo = (path: string) => {
+    navigate(path);
   };
   
   return (
@@ -95,12 +100,12 @@ const Navbar: React.FC = () => {
                   id="user-dropdown"
                   align="end"
                 >
-                  <NavDropdown.Item as={Link} to="/profile">Mi Perfil</NavDropdown.Item>
-                  <NavDropdown.Item as={Link} to="/orders">Mis Entradas</NavDropdown.Item>
+                  <NavDropdown.Item onClick={() => navigateTo('/profile')}>Mi Perfil</NavDropdown.Item>
+                  <NavDropdown.Item onClick={() => navigateTo('/profile')}>Mis Entradas</NavDropdown.Item>
                   
                   {/* Premium Subscription link for non-premium users */}
                   {!mockUser.isPremium && (
-                    <NavDropdown.Item as={Link} to="/subscription" className="premium-nav-item">
+                    <NavDropdown.Item onClick={() => navigateTo('/subscription')} className="premium-nav-item">
                       <i className="bi bi-star-fill text-warning me-2"></i>
                       Hazte Premium
                     </NavDropdown.Item>
@@ -108,9 +113,9 @@ const Navbar: React.FC = () => {
                   
                   {/* Demo navigation links to other apps */}
                   <NavDropdown.Divider />
-                  <NavDropdown.Item as={Link} to="/admin">Panel de Admin</NavDropdown.Item>
-                  <NavDropdown.Item as={Link} to="/pos">POS</NavDropdown.Item>
-                  <NavDropdown.Item as={Link} to="/validator">Validador</NavDropdown.Item>
+                  <NavDropdown.Item onClick={() => navigateTo('/admin')}>Panel de Admin</NavDropdown.Item>
+                  <NavDropdown.Item onClick={() => navigateTo('/pos')}>POS</NavDropdown.Item>
+                  <NavDropdown.Item onClick={() => navigateTo('/validator')}>Validador</NavDropdown.Item>
                   
                   <NavDropdown.Divider />
                   <NavDropdown.Item onClick={handleLogout} className="text-danger">
