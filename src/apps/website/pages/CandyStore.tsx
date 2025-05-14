@@ -12,7 +12,7 @@ const candyProducts = [
     name: 'Combo Familiar',
     description: 'Popcorn grande + 4 Gaseosas medianas + 2 Chocolates',
     price: 2000,
-    imageUrl: 'https://i.pinimg.com/736x/36/96/05/369605adcd515e808b8d950bb1997b8c.jpg',
+    imageUrl: 'https://static.cinemarkhoyts.com.ar/Images/ConcessionItemImageN/A000000198.png?v=00002574',
     category: 'combos',
     discount: 20,
     popular: true
@@ -22,7 +22,7 @@ const candyProducts = [
     name: 'Combo Pareja',
     description: 'Popcorn grande + 2 Gaseosas medianas',
     price: 1400,
-    imageUrl: 'https://m.media-amazon.com/images/M/MV5BNDRjY2E0ZmEtN2QwNi00NTEwLWI3MWItODNkMGYwYWFjNGE0XkEyXkFqcGc@._V1_FMjpg_UX1000_.jpg',
+    imageUrl: 'https://static.cinemarkhoyts.com.ar/Images/ConcessionItemImageN/A000000196.png?v=00002574',
     category: 'combos',
     discount: 15,
     popular: true
@@ -32,7 +32,7 @@ const candyProducts = [
     name: 'Popcorn Grande',
     description: 'Popcorn recién hecho en balde grande',
     price: 800,
-    imageUrl: 'https://lumiere-a.akamaihd.net/v1/images/image003_f1e9732d.jpeg?region=0,0,662,827',
+    imageUrl: 'https://static.cinemarkhoyts.com.ar/Images/ConcessionItemImageN/A000000011.png?v=00002574',
     category: 'popcorn',
     popular: true
   },
@@ -41,7 +41,7 @@ const candyProducts = [
     name: 'Popcorn Mediano',
     description: 'Popcorn recién hecho en balde mediano',
     price: 600,
-    imageUrl: 'https://images.unsplash.com/photo-1568111561564-08726a1563e1?q=80&w=300&h=450&fit=crop&auto=format',
+    imageUrl: 'https://static.cinemarkhoyts.com.ar/Images/ConcessionItemImageN/A000000010.png?v=00002574',
     category: 'popcorn'
   },
   {
@@ -49,7 +49,7 @@ const candyProducts = [
     name: 'Nachos con Queso',
     description: 'Crujientes nachos con salsa de queso',
     price: 700,
-    imageUrl: 'https://images.unsplash.com/photo-1535016120720-40c646be5580?q=80&w=300&h=450&fit=crop&auto=format',
+    imageUrl: 'https://static.cinemarkhoyts.com.ar/Images/ConcessionItemImageN/A000000038.png?v=00002574',
     category: 'snacks',
     popular: true
   },
@@ -58,7 +58,7 @@ const candyProducts = [
     name: 'Gaseosa Grande',
     description: 'Coca-Cola, Sprite o Fanta (selecciona al retirar)',
     price: 400,
-    imageUrl: 'https://images.unsplash.com/photo-1542204165-65bf26472b9b?q=80&w=300&h=450&fit=crop&auto=format',
+    imageUrl: 'https://static.cinemarkhoyts.com.ar/Images/ConcessionItemImageN/A000000028.png?v=00002574',
     category: 'drinks'
   },
   {
@@ -66,7 +66,7 @@ const candyProducts = [
     name: 'Gaseosa Mediana',
     description: 'Coca-Cola, Sprite o Fanta (selecciona al retirar)',
     price: 300,
-    imageUrl: 'https://via.placeholder.com/300x450?text=Gaseosa+Mediana',
+    imageUrl: 'https://static.cinemarkhoyts.com.ar/Images/ConcessionItemImageN/A000000027.png?v=00002574',
     category: 'drinks'
   },
   {
@@ -74,7 +74,7 @@ const candyProducts = [
     name: 'Agua Mineral',
     description: 'Botella de agua mineral 500ml',
     price: 200,
-    imageUrl: 'https://via.placeholder.com/300x450?text=Agua+Mineral',
+    imageUrl: 'https://static.cinemarkhoyts.com.ar/Images/ConcessionItemImageN/A000000013.png?v=00002574',
     category: 'drinks'
   },
   {
@@ -82,7 +82,7 @@ const candyProducts = [
     name: 'Chocolate',
     description: 'Barra de chocolate con leche',
     price: 250,
-    imageUrl: 'https://via.placeholder.com/300x450?text=Chocolate',
+    imageUrl: 'https://static.cinemarkhoyts.com.ar/Images/ConcessionItemImageN/A000004153.png?v=00002574',
     category: 'sweets'
   }
 ];

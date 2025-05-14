@@ -52,7 +52,7 @@ const Navbar: React.FC = () => {
   
   return (
     <BootstrapNavbar 
-      bg="primary" 
+      // bg="primary" 
       variant="dark" 
       expand="lg" 
       fixed="top" 
@@ -69,8 +69,8 @@ const Navbar: React.FC = () => {
         <BootstrapNavbar.Collapse id="main-navbar">
           <Nav className="me-auto">
             <Nav.Link as={NavLink} to="/" end>Inicio</Nav.Link>
-            <Nav.Link as={NavLink} to="/movies">Cartelera</Nav.Link>
-            <Nav.Link as={NavLink} to="/coming-soon">Próximos Estrenos</Nav.Link>
+            <Nav.Link as={NavLink} to="/cartelera">Cartelera</Nav.Link>
+            <Nav.Link as={NavLink} to="/proximos">Próximos Estrenos</Nav.Link>
             {/* New Candy Store Link */}
             <Nav.Link as={NavLink} to="/candy">Candy</Nav.Link>
             <Nav.Link as={NavLink} to="/promotions">Promociones</Nav.Link>

@@ -34,7 +34,7 @@ const FeaturedMovieSlide: React.FC<FeaturedMovieSlideProps> = ({ movie, onSelect
     }}>
       <div className="featured-movie-content">
         <div className="featured-movie-info">
-          <div className="featured-movie-tag mb-2">Destacada</div>
+          {/* <div className="featured-movie-tag mb-2">Destacada</div> */}
           <h2 className="featured-movie-title">{movie.title}</h2>
           <div className="featured-movie-meta mb-3">
             <div className="featured-movie-rating">
@@ -72,7 +72,7 @@ const FeaturedMovieSlide: React.FC<FeaturedMovieSlideProps> = ({ movie, onSelect
           </div>
         </div>
         <div className="featured-movie-image-container">
-          {/* <img src={movie.poster} alt={movie.title} className="featured-movie-image" /> */}
+          <img src={movie.poster} alt={movie.title} className="featured-movie-image" />
           <div className="featured-movie-poster-shadow"></div>
         </div>
       </div>
