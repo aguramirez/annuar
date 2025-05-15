@@ -81,12 +81,20 @@ const AdminLayout: React.FC = () => {
               <i className="bi bi-people me-2"></i>
               Usuarios
             </Nav.Link>
+            <Nav.Link as={Link} to="/admin/employee" className={isActive('/admin/employee') ? 'active' : ''}>
+              <i className="bi bi-people me-2"></i>
+              Empleados
+            </Nav.Link>
 
-            <div className="sidebar-divider my-3"></div>
+            {/* <div className="sidebar-divider my-3"></div> */}
 
             <Nav.Link as={Link} to="/admin/reports/sales" className={isActive('/admin/reports') ? 'active' : ''}>
               <i className="bi bi-graph-up me-2"></i>
               Reportes
+            </Nav.Link>
+            <Nav.Link as={Link} to="/admin/license" className={isActive('/admin/license') ? 'active' : ''}>
+              <i className="bi bi-graph-up me-2"></i>
+              Licencias
             </Nav.Link>
             <Nav.Link as={Link} to="/admin/settings" className={isActive('/admin/settings') ? 'active' : ''}>
               <i className="bi bi-gear me-2"></i>
@@ -110,7 +118,7 @@ const AdminLayout: React.FC = () => {
         </div>
 
         {/* Mobile Sidebar */}
-        <Offcanvas show={showSidebar} onHide={closeSidebar} responsive="lg" id="sidebar-nav">
+        {/* <Offcanvas show={showSidebar} onHide={closeSidebar} responsive="lg" id="sidebar-nav">
           <Offcanvas.Header closeButton>
             <Offcanvas.Title>
               <i className="bi bi-film me-2"></i>
@@ -163,7 +171,7 @@ const AdminLayout: React.FC = () => {
               </Nav.Link>
             </Nav>
           </Offcanvas.Body>
-        </Offcanvas>
+        </Offcanvas> */}
 
         {/* Main Content */}
         <div className="main-content">

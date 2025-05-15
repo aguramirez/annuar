@@ -34,7 +34,7 @@
   --seat-available-border: #374151;
   --seat-selected-color: var(--primary-color);
   --seat-selected-border: #E03E40;
-  --seat-occupied-color: #9CA3AF;
+  --seat-occupied-color: #ffffff;
   --seat-occupied-border: #6B7280;
 }
 
@@ -619,7 +619,7 @@ h1, h2, h3, h4, h5, h6 {
   flex-direction: column;
   align-items: center;
   background-color: var(--cinema-bg-color);
-  padding: 2rem;
+  padding: 1rem;
   border-radius: var(--border-radius);
   position: relative;
   box-shadow: var(--shadow-md);
@@ -682,7 +682,7 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .seat-available {
-  background-color: var(--seat-available-color);
+  background-color: rgb(26, 26, 26);
   border: 1px solid var(--seat-available-border);
 }
 
@@ -705,7 +705,7 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .seat-occupied {
-  background-color: var(--seat-occupied-color);
+  background-color: rgb(255, 255, 255);
   color: white;
   border: 1px solid var(--seat-occupied-border);
   cursor: not-allowed;
@@ -714,7 +714,7 @@ h1, h2, h3, h4, h5, h6 {
 .seat-legend {
   display: flex;
   justify-content: center;
-  margin: 20px 0;
+  margin: 0px 0;
 }
 
 .legend-item {
@@ -2167,7 +2167,7 @@ h1, h2, h3, h4, h5, h6 {
   box-shadow: var(--shadow-md);
 }
 
-/* Responsive adjustments */
+/* Responsive adjustments seat */
 @media (max-width: 992px) {
   .movie-title {
     font-size: 2.2rem;

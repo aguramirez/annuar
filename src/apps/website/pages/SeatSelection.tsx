@@ -1,7 +1,7 @@
 // src/apps/website/pages/SeatSelection.tsx (Updated version)
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Container, Row, Col, Card, Button, Alert, Spinner, Form } from 'react-bootstrap';
+import { Container, Row, Col, Card, Button, Alert, Spinner } from 'react-bootstrap';
 import { useTheme } from '../../../common/context/ThemeContext';
 
 interface SeatSelectionParams {
@@ -87,7 +87,40 @@ const SeatSelection: React.FC = () => {
         
         // Cargar los datos del JSON local
         const moviesData = await import('../../../data/movies.json');
-        const allMovies: Movie[] = moviesData.movies;
+        const allMoviesRaw = moviesData.movies;
+        
+        // Convert the raw movies data to match our Movie interface
+        const allMovies: Movie[] = allMoviesRaw.map((movie: any) => {
+          // Process the showtimes to ensure they're in the correct format
+          const processedShowtimes = movie.showtimes.map((showtime: any) => {
+            // Check if times is already in the right format or needs conversion
+            const processedTimes = Array.isArray(showtime.times) 
+              ? showtime.times.map((time: any) => {
+                  // If it's a string, convert to object
+                  if (typeof time === 'string') {
+                    return {
+                      time: time,
+                      room: 'Sala 1', // default
+                      available: Math.floor(Math.random() * 100) + 20, // random value
+                      total: 120 // default
+                    };
+                  }
+                  // If it's already an object, return as is
+                  return time;
+                })
+              : showtime.times;
+            
+            return {
+              ...showtime,
+              times: processedTimes
+            };
+          });
+          
+          return {
+            ...movie,
+            showtimes: processedShowtimes
+          };
+        });
         
         // Parsear el ID del show para extraer la información necesaria
         let movie: Movie | null = null;
@@ -361,7 +394,7 @@ const SeatSelection: React.FC = () => {
   }
 
   return (
-    <Container className="py-5">
+    <Container className="py-3">
       <h1 className="mb-4">Selección de Asientos</h1>
       
       {error && (
@@ -370,7 +403,7 @@ const SeatSelection: React.FC = () => {
         </Alert>
       )}
       
-      <div className="show-details mb-4">
+      <div className="show-details mb-1">
         <h2>{movieData.movie.title}</h2>
         <Row>
           <Col md={6}>
@@ -387,13 +420,10 @@ const SeatSelection: React.FC = () => {
       <Row>
         <Col lg={8}>
           <Card className="mb-4">
-            <Card.Header>
-              <h4 className="mb-0">Selección de Asientos</h4>
-            </Card.Header>
             <Card.Body>
               <div className="cinema-layout mb-4">
-                <div className="screen"></div>
-                <div className="mt-5 text-center text-muted small">
+                {/* <div className="screen"></div> */}
+                <div className="mt-1 text-center text-muted small">
                   ↓ PANTALLA ↓
                 </div>
                 
@@ -430,18 +460,6 @@ const SeatSelection: React.FC = () => {
                   <div className="legend-item">
                     <div className="legend-box seat-occupied"></div>
                     <span>Ocupado</span>
-                  </div>
-                  <div className="legend-item">
-                    <div className="legend-box seat-standard"></div>
-                    <span>Standard - ${getSeatPrice('standard')}</span>
-                  </div>
-                  <div className="legend-item">
-                    <div className="legend-box seat-vip"></div>
-                    <span>VIP - ${getSeatPrice('vip')}</span>
-                  </div>
-                  <div className="legend-item">
-                    <div className="legend-box seat-premium"></div>
-                    <span>Premium - ${getSeatPrice('premium')}</span>
                   </div>
                 </div>
               </div>

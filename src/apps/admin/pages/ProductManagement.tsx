@@ -403,7 +403,6 @@ const ProductManagement: React.FC = () => {
           <div className="d-flex justify-content-end mb-3">
             <Button variant="primary" onClick={handleAddProduct}>
               <i className="bi bi-plus-lg me-2"></i>
-              // src/apps/admin/pages/ProductManagement.tsx (continuación)
               Agregar Producto
             </Button>
           </div>

@@ -348,7 +348,6 @@ const ReportingSales: React.FC = () => {
                                         <tr key={movie.id}>
                                             <td>{movie.title}</td>
                                             <td className="text-end">{movie.tickets}</td>
-                      // src/apps/admin/pages/ReportingSales.tsx (continuación)
                                             <td className="text-end">${movie.sales.toLocaleString('es-AR')}</td>
                                             <td className="text-end">{movie.occupancyRate}%</td>
                                         </tr>

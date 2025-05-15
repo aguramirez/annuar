@@ -78,7 +78,7 @@ const Navbar: React.FC = () => {
             <Nav.Link as={NavLink} to="/proximos">Próximos Estrenos</Nav.Link>
             {/* New Candy Store Link */}
             <Nav.Link as={NavLink} to="/candy">Candy</Nav.Link>
-            <Nav.Link as={NavLink} to="/promotions">Promociones</Nav.Link>
+            <Nav.Link as={NavLink} to="/subscription">Subscripcion</Nav.Link>
           </Nav>
           
           <Nav className="d-flex align-items-center">
@@ -92,7 +92,7 @@ const Navbar: React.FC = () => {
                     <span className="d-flex align-items-center">
                       <i className="bi bi-person-circle me-1"></i>
                       {mockUser.isPremium && (
-                        <Badge bg="warning" text="dark" className="me-1" pill>Premium</Badge>
+                        <Badge bg="warning" text="dark" className="me-1" pill>Miembro</Badge>
                       )}
                       Mi Cuenta
                     </span>

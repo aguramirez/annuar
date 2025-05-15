@@ -1,163 +1,54 @@
-import React, { useState } from 'react';
+// src/apps/admin/pages/MovieLicenseContracts.tsx
+import { useState } from 'react';
+import { Container, Card, Form, Button, Row, Col, Tabs, Tab, Alert } from 'react-bootstrap';
+import { mockMovieContracts, mockUpcomingContracts } from '../../../data/mockData';
 
-// Mock movie license contracts data
-const mockMovieContracts = [
-  {
-    id: 1,
-    movieTitle: "Minecraft",
-    studio: "Warner Bros. Pictures",
-    licenseType: "Standard",
-    startDate: "2025-03-01",
-    endDate: "2025-05-31",
-    revenueSplit: 60, // Percentage that goes to the studio
-    minimumGuarantee: 20000,
-    currentRevenue: 85400,
-    paymentStatus: "Paid",
-    lastPaymentDate: "2025-04-30",
-    notes: "Contrato estándar, 60/40 split durante las primeras 8 semanas.",
-    attachments: ["minecraft_contract.pdf", "addendum_1.pdf"],
-    status: "active",
-    daysLeft: 16
-  },
-  {
-    id: 2,
-    movieTitle: "Capitan America: Un Nuevo Mundo",
-    studio: "Disney/Marvel",
-    licenseType: "Premium",
-    startDate: "2025-04-01",
-    endDate: "2025-06-15",
-    revenueSplit: 70, // Percentage that goes to the studio
-    minimumGuarantee: 35000,
-    currentRevenue: 124800,
-    paymentStatus: "Pending",
-    lastPaymentDate: "2025-04-15",
-    nextPaymentDue: "2025-05-15",
-    notes: "Contrato premium, 70/30 split durante toda la exhibición. Mínimo de 45 funciones por semana.",
-    attachments: ["captain_america_contract.pdf"],
-    status: "active",
-    daysLeft: 31,
-    pendingPaymentAmount: 25600
-  },
-  {
-    id: 3,
-    movieTitle: "Blanca Nieves",
-    studio: "Disney",
-    licenseType: "Standard",
-    startDate: "2025-03-15",
-    endDate: "2025-05-15",
-    revenueSplit: 55, // Percentage that goes to the studio
-    minimumGuarantee: 15000,
-    currentRevenue: 42300,
-    paymentStatus: "Paid",
-    lastPaymentDate: "2025-04-30",
-    notes: "Película familiar con buen desempeño en sesiones matinales.",
-    attachments: ["snow_white_contract.pdf"],
-    status: "active",
-    daysLeft: 0,
-    warningDays: true
-  },
-  {
-    id: 4,
-    movieTitle: "Thunderbolts",
-    studio: "Disney/Marvel",
-    licenseType: "Premium",
-    startDate: "2025-04-10",
-    endDate: "2025-06-30",
-    revenueSplit: 65, // Percentage that goes to the studio
-    minimumGuarantee: 30000,
-    currentRevenue: 78600,
-    paymentStatus: "Pending",
-    lastPaymentDate: "2025-04-30",
-    nextPaymentDue: "2025-05-15",
-    notes: "Contrato premium con exhibición en salas premium obligatoria.",
-    attachments: ["thunderbolts_contract.pdf", "marketing_requirements.pdf"],
-    status: "active",
-    daysLeft: 46,
-    pendingPaymentAmount: 18700
-  },
-  {
-    id: 5,
-    movieTitle: "Karate Kid",
-    studio: "Sony Pictures",
-    licenseType: "Standard",
-    startDate: "2025-04-01",
-    endDate: "2025-05-31",
-    revenueSplit: 55, // Percentage that goes to the studio
-    minimumGuarantee: 18000,
-    currentRevenue: 38200,
-    paymentStatus: "Paid",
-    lastPaymentDate: "2025-04-30",
-    notes: "Contrato estándar, posibilidad de extensión basada en desempeño.",
-    attachments: ["karate_kid_contract.pdf"],
-    status: "active",
-    daysLeft: 16
-  },
-  {
-    id: 6,
-    movieTitle: "Mazel Tov",
-    studio: "Warner Bros. Pictures",
-    licenseType: "Indie/Special",
-    startDate: "2025-03-25",
-    endDate: "2025-05-10",
-    revenueSplit: 50, // Percentage that goes to the studio
-    minimumGuarantee: 8000,
-    currentRevenue: 12300,
-    paymentStatus: "Paid",
-    lastPaymentDate: "2025-04-15",
-    notes: "Película de arte con condiciones especiales, mínimo de 14 funciones por semana.",
-    attachments: ["mazel_tov_contract.pdf"],
-    status: "expired",
-    daysLeft: -5
-  }
-];
+// Define types for movie license contracts
+interface EmployeeVariance {
+  type: string;
+  amount: number;
+  reason: string;
+}
 
-// Upcoming contracts (movies that will be available soon)
-const mockUpcomingContracts = [
-  {
-    id: 101,
-    movieTitle: "Dune Parte 3",
-    studio: "Warner Bros. Pictures",
-    licenseType: "Premium",
-    startDate: "2025-06-15",
-    endDate: "2025-08-31",
-    revenueSplit: 75, // Percentage that goes to the studio
-    minimumGuarantee: 45000,
-    status: "pending_signature",
-    notes: "Contrato premium para una de las películas más esperadas del año.",
-    daysToStart: 31
-  },
-  {
-    id: 102,
-    movieTitle: "Avatar 3",
-    studio: "Disney/20th Century",
-    licenseType: "Premium Plus",
-    startDate: "2025-07-01",
-    endDate: "2025-09-30",
-    revenueSplit: 80, // Percentage that goes to the studio
-    minimumGuarantee: 60000,
-    status: "negotiation",
-    notes: "En negociación, se espera firmar antes del 30 de mayo.",
-    daysToStart: 47
-  },
-  {
-    id: 103,
-    movieTitle: "Gladiador II",
-    studio: "Paramount Pictures",
-    licenseType: "Premium",
-    startDate: "2025-06-01",
-    endDate: "2025-08-15",
-    revenueSplit: 70, // Percentage that goes to the studio
-    minimumGuarantee: 40000,
-    status: "confirmed",
-    notes: "Contrato confirmado, pendiente de recibir documentación final.",
-    daysToStart: 17
-  }
-];
+interface MovieContract {
+  id: number;
+  movieTitle: string;
+  studio: string;
+  licenseType: string;
+  startDate: string;
+  endDate: string;
+  revenueSplit: number; // Percentage that goes to the studio
+  minimumGuarantee: number;
+  currentRevenue?: number;
+  paymentStatus?: string;
+  lastPaymentDate?: string;
+  nextPaymentDue?: string;
+  notes: string;
+  attachments?: string[];
+  status: 'active' | 'expired' | 'pending_signature' | 'negotiation' | 'confirmed';
+  daysLeft: number;
+  warningDays?: boolean;
+  pendingPaymentAmount?: number;
+}
 
-const MovieLicenseContracts = () => {
-  const [contracts] = useState(mockMovieContracts);
-  const [upcomingContracts] = useState(mockUpcomingContracts);
-  const [selectedContract, setSelectedContract] = useState(null);
+interface UpcomingContract {
+  id: number;
+  movieTitle: string;
+  studio: string;
+  licenseType: string;
+  startDate: string;
+  endDate: string;
+  revenueSplit: number;
+  minimumGuarantee: number;
+  status: 'pending_signature' | 'negotiation' | 'confirmed';
+  notes: string;
+  daysToStart: number;
+}
+
+const MovieLicenseContracts: React.FC = () => {
+  const [contracts, setContracts] = useState<MovieContract[]>(mockMovieContracts as MovieContract[]);
+  const [upcomingContracts] = useState<UpcomingContract[]>(mockUpcomingContracts as UpcomingContract[]);
+  const [selectedContract, setSelectedContract] = useState<MovieContract | UpcomingContract | null>(null);
   const [filterStatus, setFilterStatus] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [showPaymentModal, setShowPaymentModal] = useState(false);
@@ -184,7 +75,7 @@ const MovieLicenseContracts = () => {
   });
   
   // Handle contract selection
-  const handleSelectContract = (contract) => {
+  const handleSelectContract = (contract: MovieContract | UpcomingContract) => {
     setSelectedContract(contract);
   };
   
@@ -199,24 +90,24 @@ const MovieLicenseContracts = () => {
   ).length;
   
   // Format currency
-  const formatCurrency = (amount) => {
+  const formatCurrency = (amount: number): string => {
     return `$${amount.toLocaleString('es-AR')}`;
   };
   
   // Format date
-  const formatDate = (dateString) => {
+  const formatDate = (dateString: string): string => {
     return new Date(dateString).toLocaleDateString('es-AR');
   };
   
   // Handle make payment button
-  const handleMakePayment = (contract) => {
+  const handleMakePayment = (contract: MovieContract) => {
     setSelectedContract(contract);
     setPaymentAmount(contract.pendingPaymentAmount?.toString() || '');
     setShowPaymentModal(true);
   };
   
   // Handle view contract
-  const handleViewContract = (contract) => {
+  const handleViewContract = (contract: MovieContract | UpcomingContract) => {
     setSelectedContract(contract);
     setShowContractModal(true);
   };
@@ -230,7 +121,9 @@ const MovieLicenseContracts = () => {
   // Handle submit payment
   const handleSubmitPayment = () => {
     // In a real app, this would make an API call
-    alert(`Pago de ${formatCurrency(parseFloat(paymentAmount))} registrado para ${selectedContract.movieTitle}`);
+    if (selectedContract) {
+      alert(`Pago de ${formatCurrency(parseFloat(paymentAmount))} registrado para ${selectedContract.movieTitle}`);
+    }
     handleCloseModals();
   };
   
@@ -366,7 +259,7 @@ const MovieLicenseContracts = () => {
                         </div>
                       )}
                     </td>
-                    <td className="text-end">{formatCurrency(contract.currentRevenue)}</td>
+                    <td className="text-end">{formatCurrency(contract.currentRevenue || 0)}</td>
                     <td>
                       {contract.paymentStatus === 'Paid' ? (
                         <span className="badge bg-success">Pagado</span>
@@ -471,7 +364,7 @@ const MovieLicenseContracts = () => {
       
       {/* Payment Modal */}
       {showPaymentModal && selectedContract && (
-        <div className="modal show d-block" tabIndex="-1">
+        <div className="modal show d-block" tabIndex={-1}>
           <div className="modal-dialog">
             <div className="modal-content">
               <div className="modal-header">
@@ -533,7 +426,7 @@ const MovieLicenseContracts = () => {
       
       {/* Contract Detail Modal */}
       {showContractModal && selectedContract && (
-        <div className="modal show d-block" tabIndex="-1">
+        <div className="modal show d-block" tabIndex={-1}>
           <div className="modal-dialog modal-lg">
             <div className="modal-content">
               <div className="modal-header">
@@ -593,13 +486,13 @@ const MovieLicenseContracts = () => {
                           <th>Garantía Mínima:</th>
                           <td>{formatCurrency(selectedContract.minimumGuarantee)}</td>
                         </tr>
-                        {selectedContract.currentRevenue && (
+                        {'currentRevenue' in selectedContract && (
                           <tr>
                             <th>Ingresos Actuales:</th>
-                            <td>{formatCurrency(selectedContract.currentRevenue)}</td>
+                            <td>{formatCurrency(selectedContract.currentRevenue || 0)}</td>
                           </tr>
                         )}
-                        {selectedContract.paymentStatus && (
+                        {'paymentStatus' in selectedContract && (
                           <tr>
                             <th>Estado de Pago:</th>
                             <td>
@@ -611,13 +504,13 @@ const MovieLicenseContracts = () => {
                             </td>
                           </tr>
                         )}
-                        {selectedContract.lastPaymentDate && (
+                        {'lastPaymentDate' in selectedContract && selectedContract.lastPaymentDate && (
                           <tr>
                             <th>Último Pago:</th>
                             <td>{formatDate(selectedContract.lastPaymentDate)}</td>
                           </tr>
                         )}
-                        {selectedContract.nextPaymentDue && (
+                        {'nextPaymentDue' in selectedContract && selectedContract.nextPaymentDue && (
                           <tr>
                             <th>Próximo Pago:</th>
                             <td>{formatDate(selectedContract.nextPaymentDue)}</td>
@@ -635,7 +528,7 @@ const MovieLicenseContracts = () => {
                   </div>
                 </div>
                 
-                {selectedContract.attachments && selectedContract.attachments.length > 0 && (
+                {'attachments' in selectedContract && selectedContract.attachments && selectedContract.attachments.length > 0 && (
                   <div className="row mt-3">
                     <div className="col-12">
                       <h6>Documentos Adjuntos</h6>
@@ -665,19 +558,19 @@ const MovieLicenseContracts = () => {
                 <button type="button" className="btn btn-secondary" onClick={handleCloseModals}>
                   Cerrar
                 </button>
-                {selectedContract.status === 'active' && (
+                {'status' in selectedContract && selectedContract.status === 'active' && (
                   <>
                     <button type="button" className="btn btn-primary">
                       <i className="bi bi-pencil me-1"></i>
                       Editar
                     </button>
-                    {selectedContract.paymentStatus === 'Pending' && (
+                    {'paymentStatus' in selectedContract && selectedContract.paymentStatus === 'Pending' && (
                       <button 
                         type="button" 
                         className="btn btn-success"
                         onClick={() => {
                           handleCloseModals();
-                          handleMakePayment(selectedContract);
+                          handleMakePayment(selectedContract as MovieContract);
                         }}
                       >
                         <i className="bi bi-cash me-1"></i>

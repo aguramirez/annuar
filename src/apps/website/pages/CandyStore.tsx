@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Container, Row, Col, Card, Button, Badge, Spinner, Alert } from 'react-bootstrap';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useTheme } from '../../../common/context/ThemeContext';
-import CandyPricingComparison from '../components/CandyPricingComparison';
+import CandyPricingComparison from '../components/CandyPriceComparison';
 
 // Mock data for candy products
 const candyProducts = [
@@ -121,7 +121,7 @@ const CandyStore: React.FC = () => {
   const { theme } = useTheme();
   const navigate = useNavigate();
   const location = useLocation();
-  
+
   // State for the component
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [cart, setCart] = useState<CartItem[]>([]);
@@ -129,32 +129,32 @@ const CandyStore: React.FC = () => {
   const [showSuccessAlert, setShowSuccessAlert] = useState(false);
   const [showLowStockAlert, setShowLowStockAlert] = useState(false);
   const [localProducts, setLocalProducts] = useState(candyProducts);
-  
+
   // Check if we're coming from ticket selection
   const fromTicketSelection = location.state?.fromTicketSelection || false;
   const reservationId = location.state?.reservationId || 'mock-reservation-123';
-  
+
   // Calculate total items and price in cart
   const cartTotal = cart.reduce((total, item) => {
     // Apply premium discount if applicable
-    const price = mockUser.isPremium && item.product.discount 
+    const price = mockUser.isPremium && item.product.discount
       ? item.product.price * (1 - item.product.discount / 100)
       : item.product.price;
-    
+
     return total + (price * item.quantity);
   }, 0);
-  
+
   const regularCartTotal = cart.reduce((total, item) => {
     return total + (item.product.price * item.quantity);
   }, 0);
-  
+
   const cartItemCount = cart.reduce((count, item) => count + item.quantity, 0);
-  
+
   // Filter products by category
-  const filteredProducts = selectedCategory === 'all' 
-    ? localProducts 
+  const filteredProducts = selectedCategory === 'all'
+    ? localProducts
     : localProducts.filter(product => product.category === selectedCategory);
-  
+
   // Add to cart function
   const addToCart = (product: any) => {
     // Check if product has stock
@@ -163,11 +163,11 @@ const CandyStore: React.FC = () => {
       setTimeout(() => setShowLowStockAlert(false), 3000);
       return;
     }
-    
+
     setCart(prevCart => {
       // Check if product already in cart
       const existingItem = prevCart.find(item => item.product.id === product.id);
-      
+
       if (existingItem) {
         // Check if trying to add more than available stock
         if (existingItem.quantity >= product.stock) {
@@ -175,11 +175,11 @@ const CandyStore: React.FC = () => {
           setTimeout(() => setShowLowStockAlert(false), 3000);
           return prevCart;
         }
-        
+
         // Increment quantity if already in cart
-        return prevCart.map(item => 
-          item.product.id === product.id 
-            ? { ...item, quantity: item.quantity + 1 } 
+        return prevCart.map(item =>
+          item.product.id === product.id
+            ? { ...item, quantity: item.quantity + 1 }
             : item
         );
       } else {
@@ -187,57 +187,57 @@ const CandyStore: React.FC = () => {
         return [...prevCart, { product, quantity: 1 }];
       }
     });
-    
+
     // Update product stock
-    setLocalProducts(prevProducts => 
-      prevProducts.map(p => 
-        p.id === product.id 
+    setLocalProducts(prevProducts =>
+      prevProducts.map(p =>
+        p.id === product.id
           ? { ...p, stock: p.stock - 1 }
           : p
       )
     );
-    
+
     // Show success message
     setShowSuccessAlert(true);
     setTimeout(() => setShowSuccessAlert(false), 2000);
   };
-  
+
   // Remove from cart
   const removeFromCart = (productId: string) => {
     // Get quantity of product in cart before removing
     const itemInCart = cart.find(item => item.product.id === productId);
     const quantityToRestore = itemInCart ? itemInCart.quantity : 0;
-    
+
     // Remove from cart
     setCart(prevCart => prevCart.filter(item => item.product.id !== productId));
-    
+
     // Restore stock
     if (quantityToRestore > 0) {
-      setLocalProducts(prevProducts => 
-        prevProducts.map(p => 
-          p.id === productId 
+      setLocalProducts(prevProducts =>
+        prevProducts.map(p =>
+          p.id === productId
             ? { ...p, stock: p.stock + quantityToRestore }
             : p
         )
       );
     }
   };
-  
+
   // Update quantity
   const updateQuantity = (productId: string, newQuantity: number) => {
     if (newQuantity <= 0) {
       removeFromCart(productId);
       return;
     }
-    
+
     // Find product in local products
     const product = localProducts.find(p => p.id === productId);
     if (!product) return;
-    
+
     // Find current quantity in cart
     const currentItem = cart.find(item => item.product.id === productId);
     const currentQuantity = currentItem ? currentItem.quantity : 0;
-    
+
     // Check if trying to add more than available stock
     const availableStock = product.stock + currentQuantity;
     if (newQuantity > availableStock) {
@@ -245,106 +245,117 @@ const CandyStore: React.FC = () => {
       setTimeout(() => setShowLowStockAlert(false), 3000);
       return;
     }
-    
+
     // Update cart
-    setCart(prevCart => 
-      prevCart.map(item => 
-        item.product.id === productId 
-          ? { ...item, quantity: newQuantity } 
+    setCart(prevCart =>
+      prevCart.map(item =>
+        item.product.id === productId
+          ? { ...item, quantity: newQuantity }
           : item
       )
     );
-    
+
     // Update product stock
     const stockDifference = currentQuantity - newQuantity;
-    setLocalProducts(prevProducts => 
-      prevProducts.map(p => 
-        p.id === productId 
+    setLocalProducts(prevProducts =>
+      prevProducts.map(p =>
+        p.id === productId
           ? { ...p, stock: p.stock + stockDifference }
           : p
       )
     );
   };
-  
+
   // Check if product is in cart
   const isInCart = (productId: string): boolean => {
     return cart.some(item => item.product.id === productId);
   };
-  
+
   // Get quantity of item in cart
   const getQuantity = (productId: string): number => {
     const item = cart.find(item => item.product.id === productId);
     return item ? item.quantity : 0;
   };
-  
+
   // Calculate premium discount price
   const calculateDiscountedPrice = (product: any) => {
     if (!mockUser.isPremium || !product.discount) return product.price;
     return product.price * (1 - product.discount / 100);
   };
-  
+
   // Continue to checkout
   const handleContinue = () => {
     // Simulate loading
     setLoading(true);
-    
+
     setTimeout(() => {
       setLoading(false);
-      
+
       if (fromTicketSelection) {
         // If from ticket selection, go to payment with both tickets and candy
-        navigate(`/payment/${reservationId}`, { 
-          state: { 
+        navigate(`/payment/${reservationId}`, {
+          state: {
             candyItems: cart,
-            fromCandyStore: true 
+            fromCandyStore: true
           }
         });
       } else {
         // Otherwise go to candy checkout
-        navigate('/candy-checkout', { 
-          state: { candyItems: cart } 
+        navigate('/candy-checkout', {
+          state: { candyItems: cart }
         });
       }
     }, 800);
   };
-  
+
   // Effect to handle popup when product is added
   useEffect(() => {
     // Scroll to top when component mounts
     window.scrollTo(0, 0);
   }, []);
-  
+
   // Find product with highest discount for comparison
   const highestDiscountProduct = localProducts
-    .filter(p => p.discount)
-    .sort((a, b) => (b.discount || 0) - (a.discount || 0))[0];
-  
+    .filter(p => p.discount) // Filter products with discounts
+    .sort((a, b) => ((b.discount || 0) - (a.discount || 0))) // Sort by discount value, handling null/undefined
+    .find(() => true);
+
+  {
+    highestDiscountProduct && (
+      <CandyPricingComparison
+        regularPrice={highestDiscountProduct.price}
+        premiumDiscount={highestDiscountProduct.discount || 0}
+        isPremium={mockUser.isPremium}
+      />
+    )
+  }
+
   return (
     <Container className="py-5">
       {/* Success alert when adding items */}
       {showSuccessAlert && (
-        <Alert 
-          variant="success" 
+        <Alert
+          variant="success"
           className="position-fixed top-0 start-50 translate-middle-x mt-4 z-index-toast"
           style={{ zIndex: 1050 }}
         >
           Producto agregado al carrito
         </Alert>
       )}
-      
+
       {/* Low stock alert */}
       {showLowStockAlert && (
-        <Alert 
-          variant="warning" 
+        <Alert
+          variant="warning"
           className="position-fixed top-0 start-50 translate-middle-x mt-4 z-index-toast"
           style={{ zIndex: 1050 }}
         >
           Stock insuficiente para este producto
         </Alert>
       )}
-      
+
       <h1 className="mb-2">Tienda de Candy</h1>
-      
+
       {mockUser.isPremium && (
         <div className="premium-badge mb-4">
           <Badge bg="warning" text="dark" className="p-2">
@@ -353,14 +364,14 @@ const CandyStore: React.FC = () => {
           </Badge>
         </div>
       )}
-      
+
       {fromTicketSelection && (
         <Alert variant="info" className="mb-4">
           <i className="bi bi-info-circle-fill me-2"></i>
           Agrega snacks y bebidas a tu compra de entradas. ¡Todo se podrá retirar con el mismo código QR!
         </Alert>
       )}
-      
+
       <Row>
         <Col lg={9}>
           {/* Categories */}
@@ -377,39 +388,39 @@ const CandyStore: React.FC = () => {
               </Button>
             ))}
           </div>
-          
+
           {/* Price comparison for premium users */}
           {highestDiscountProduct && (
-            <CandyPricingComparison 
+            <CandyPricingComparison
               regularPrice={highestDiscountProduct.price}
               premiumDiscount={highestDiscountProduct.discount || 0}
               isPremium={mockUser.isPremium}
             />
           )}
-          
+
           {/* Products Grid */}
           <Row xs={1} md={2} lg={3} className="g-4">
             {filteredProducts.map(product => (
               <Col key={product.id}>
                 <Card className="h-100 product-card">
                   <div className="position-relative">
-                    <Card.Img 
-                      variant="top" 
-                      src={product.imageUrl} 
+                    <Card.Img
+                      variant="top"
+                      src={product.imageUrl}
                       alt={product.name}
                       style={{ height: '200px', objectFit: 'cover' }}
                     />
-                    
+
                     {product.discount && (
                       <div className="position-absolute top-0 end-0 m-2">
                         <Badge bg="danger" className="p-2">
-                          {mockUser.isPremium 
-                            ? `-${product.discount}%` 
+                          {mockUser.isPremium
+                            ? `-${product.discount}%`
                             : product.discount ? 'PREMIUM' : ''}
                         </Badge>
                       </div>
                     )}
-                    
+
                     {product.popular && (
                       <div className="position-absolute top-0 start-0 m-2">
                         <Badge bg="warning" text="dark" className="p-2">
@@ -418,11 +429,11 @@ const CandyStore: React.FC = () => {
                       </div>
                     )}
                   </div>
-                  
+
                   <Card.Body className="d-flex flex-column">
                     <Card.Title>{product.name}</Card.Title>
                     <Card.Text>{product.description}</Card.Text>
-                    
+
                     <div className="mt-auto">
                       <div className="d-flex justify-content-between align-items-center mb-3">
                         <div>
@@ -441,10 +452,10 @@ const CandyStore: React.FC = () => {
                           Stock: {product.stock}
                         </Badge>
                       </div>
-                      
+
                       {!isInCart(product.id) ? (
-                        <Button 
-                          variant="primary" 
+                        <Button
+                          variant="primary"
                           className="w-100"
                           onClick={() => addToCart(product)}
                           disabled={product.stock <= 0}
@@ -454,18 +465,18 @@ const CandyStore: React.FC = () => {
                         </Button>
                       ) : (
                         <div className="d-flex justify-content-between align-items-center">
-                          <Button 
-                            variant="outline-primary" 
+                          <Button
+                            variant="outline-primary"
                             size="sm"
                             onClick={() => updateQuantity(product.id, getQuantity(product.id) - 1)}
                           >
                             <i className="bi bi-dash"></i>
                           </Button>
-                          
+
                           <span className="mx-2 fw-bold">{getQuantity(product.id)}</span>
-                          
-                          <Button 
-                            variant="outline-primary" 
+
+                          <Button
+                            variant="outline-primary"
                             size="sm"
                             onClick={() => updateQuantity(product.id, getQuantity(product.id) + 1)}
                             disabled={product.stock <= 0}
@@ -481,7 +492,7 @@ const CandyStore: React.FC = () => {
             ))}
           </Row>
         </Col>
-        
+
         <Col lg={3}>
           {/* Shopping Cart */}
           <Card className="mb-4 position-sticky" style={{ top: '1rem' }}>
@@ -508,21 +519,21 @@ const CandyStore: React.FC = () => {
                       <div>
                         <h6 className="mb-0">{item.product.name}</h6>
                         <div className="d-flex align-items-center mt-1">
-                          <Button 
-                            variant="outline-secondary" 
-                            size="sm" 
+                          <Button
+                            variant="outline-secondary"
+                            size="sm"
                             className="p-0 px-1"
                             onClick={() => updateQuantity(item.product.id, item.quantity - 1)}
                           >
                             <i className="bi bi-dash"></i>
                           </Button>
                           <span className="mx-2">{item.quantity}</span>
-                          <Button 
-                            variant="outline-secondary" 
-                            size="sm" 
+                          <Button
+                            variant="outline-secondary"
+                            size="sm"
                             className="p-0 px-1"
                             onClick={() => updateQuantity(item.product.id, item.quantity + 1)}
-                            disabled={localProducts.find(p => p.id === item.product.id)?.stock <= 0}
+                            disabled={(localProducts.find(p => p.id === item.product.id)?.stock || 0) <= 0}
                           >
                             <i className="bi bi-plus"></i>
                           </Button>
@@ -539,9 +550,9 @@ const CandyStore: React.FC = () => {
                         ) : (
                           <span>${item.product.price * item.quantity}</span>
                         )}
-                        <Button 
-                          variant="link" 
-                          className="p-0 text-danger" 
+                        <Button
+                          variant="link"
+                          className="p-0 text-danger"
                           onClick={() => removeFromCart(item.product.id)}
                         >
                           <i className="bi bi-x"></i>
@@ -549,7 +560,7 @@ const CandyStore: React.FC = () => {
                       </div>
                     </div>
                   ))}
-                  
+
                   {/* Cart Summary */}
                   {mockUser.isPremium && cartTotal !== regularCartTotal && (
                     <div className="d-flex justify-content-between text-muted mb-2">
@@ -557,12 +568,12 @@ const CandyStore: React.FC = () => {
                       <span className="text-decoration-line-through">${regularCartTotal.toFixed(2)}</span>
                     </div>
                   )}
-                  
+
                   <div className="d-flex justify-content-between fw-bold mb-3">
                     <span>Total:</span>
                     <span>${cartTotal.toFixed(2)}</span>
                   </div>
-                  
+
                   {mockUser.isPremium && cartTotal !== regularCartTotal && (
                     <div className="alert alert-success p-2 text-center mb-3">
                       <small>
@@ -571,10 +582,10 @@ const CandyStore: React.FC = () => {
                       </small>
                     </div>
                   )}
-                  
+
                   {/* Checkout Button */}
-                  <Button 
-                    variant="primary" 
+                  <Button
+                    variant="primary"
                     className="w-100 mb-2"
                     onClick={handleContinue}
                     disabled={loading}
@@ -590,7 +601,7 @@ const CandyStore: React.FC = () => {
                       </>
                     )}
                   </Button>
-                  
+
                   {/* Add Tickets Button */}
                   {!fromTicketSelection && (
                     <div className="text-center">
@@ -604,7 +615,7 @@ const CandyStore: React.FC = () => {
               )}
             </Card.Body>
           </Card>
-          
+
           {/* Premium Promotion Card */}
           {!mockUser.isPremium && mockUser.isAuthenticated && (
             <Card className="premium-promo-card">
@@ -614,8 +625,8 @@ const CandyStore: React.FC = () => {
                   ¡Hazte Premium!
                 </h5>
                 <p className="card-text">Obtén un 10% extra de descuento en todas tus compras y disfruta de 2 entradas gratis cada mes.</p>
-                <Button 
-                  variant="warning" 
+                <Button
+                  variant="warning"
                   className="w-100"
                   onClick={() => navigate('/subscription')}
                 >

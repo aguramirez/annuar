@@ -335,7 +335,6 @@ const ShowManagement: React.FC = () => {
                   >
                     <option value="Español">Español</option>
                     <option value="Inglés">Inglés</option>
-                    <option value="Portugués">Portugués</option>
                   </Form.Select>
                 </Form.Group>
               </Col>

@@ -1,26 +1,56 @@
-// src/apps/website/pages/Payment.tsx
+// src/apps/website/pages/Payment.tsx (Versión mockeada para funcionar sin backend)
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { Container, Row, Col, Card, Form, Button, Alert, Spinner } from 'react-bootstrap';
-import reservationService from '../../../common/services/reservationService';
-import orderService from '../../../common/services/orderService';
-import paymentService from '../../../common/services/paymentService';
-import productService from '../../../common/services/productService';
 
 interface PaymentParams {
   reservationId: string;
   [key: string]: string | undefined;
 }
 
+interface ReservationData {
+  id: string;
+  movieTitle: string;
+  startTime: string;
+  endTime?: string;
+  roomName: string;
+  seats: Array<{row: string, number: string}>;
+  totalAmount: number;
+}
+
+// Simula los tipos de entradas seleccionadas
+interface TicketType {
+  type: string;
+  quantity: number;
+}
+
+// Interfaz para productos candy
+interface CandyItem {
+  product: {
+    id: string;
+    name: string;
+    price: number;
+    discount?: number;
+  };
+  quantity: number;
+}
+
 const Payment: React.FC = () => {
   const { reservationId } = useParams<PaymentParams>();
+  const location = useLocation();
   const navigate = useNavigate();
   
-  const [reservation, setReservation] = useState<any>(null);
-  const [products, setProducts] = useState<any[]>([]);
-  const [combos, setCombos] = useState<any[]>([]);
-  const [selectedProducts, setSelectedProducts] = useState<{id: string, quantity: number}[]>([]);
-  const [selectedCombos, setSelectedCombos] = useState<{id: string, quantity: number}[]>([]);
+  // Extrae datos de location.state (si existen)
+  const stateData = location.state as any;
+  
+  // Estado para la página
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [processing, setProcessing] = useState(false);
+  const [success, setSuccess] = useState(false);
+  const [orderId, setOrderId] = useState<string | null>(null);
+  
+  // Estados para la información de pago
   const [paymentMethod, setPaymentMethod] = useState('card');
   const [cardDetails, setCardDetails] = useState({
     cardNumber: '',
@@ -28,184 +58,168 @@ const Payment: React.FC = () => {
     expirationDate: '',
     cvv: ''
   });
-  const [customerEmail, setCustomerEmail] = useState('');
-  const [loading, setLoading] = useState(true);
-  const [processing, setProcessing] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState(false);
-  const [orderId, setOrderId] = useState<string | null>(null);
+  const [customerInfo, setCustomerInfo] = useState({
+    email: '',
+    phone: '',
+    name: ''
+  });
+  
+  // Mock de la reserva (simula datos que vendrían del backend)
+  const [reservation, setReservation] = useState<ReservationData | null>(null);
+  const [selectedTickets, setSelectedTickets] = useState<TicketType[]>([]);
+  const [candyItems, setCandyItems] = useState<CandyItem[]>([]);
   
   useEffect(() => {
-    const fetchData = async () => {
-      if (!reservationId) return;
+    // Simular carga de datos
+    const loadData = async () => {
+      setLoading(true);
       
       try {
-        setLoading(true);
-        // Obtener detalles de la reserva
-        const reservationData = await reservationService.getReservationById(reservationId);
-        setReservation(reservationData);
+        // Pequeña demora para simular carga
+        await new Promise(resolve => setTimeout(resolve, 800));
         
-        // Obtener productos y combos disponibles
-        if (reservationData.cinemaId) {
-          const productsData = await productService.getAvailableProducts(reservationData.cinemaId);
-          setProducts(productsData);
+        // Si tenemos datos en location.state, los usamos
+        if (stateData) {
+          // Construir la reserva a partir de location.state
+          const mockReservation: ReservationData = {
+            id: reservationId || 'res-mock-123',
+            movieTitle: stateData.movieTitle || 'Película de ejemplo',
+            startTime: stateData.showDate ? `${stateData.showDate} ${stateData.showTime || '15:30'}` : new Date().toISOString(),
+            roomName: stateData.room || 'Sala 1',
+            seats: stateData.seats 
+              ? Array.isArray(stateData.seats) 
+                ? stateData.seats.map((seat: any) => {
+                    // Extraer row y number de cada asiento (formato "A1", "B2", etc)
+                    const row = seat.match(/[A-Z]/)[0];
+                    const number = seat.match(/\d+/)[0];
+                    return { row, number };
+                  })
+                : [{ row: 'A', number: '1' }]
+              : [{ row: 'A', number: '1' }, { row: 'A', number: '2' }],
+            totalAmount: stateData.totalAmount || 2000
+          };
           
-          const combosData = await productService.getAvailableCombos(reservationData.cinemaId);
-          setCombos(combosData);
+          setReservation(mockReservation);
+          
+          // Si hay tipos de tickets, los configuramos
+          if (stateData.ticketTypes) {
+            setSelectedTickets(stateData.ticketTypes);
+          }
+          
+          // Si hay items de candy, los configuramos
+          if (stateData.candyItems) {
+            setCandyItems(stateData.candyItems);
+          }
+        } else {
+          // Si no hay datos de estado, creamos una reserva mock
+          const mockReservation: ReservationData = {
+            id: reservationId || 'res-mock-123',
+            movieTitle: 'Minecraft',
+            startTime: '2025-05-20 15:30',
+            roomName: 'Sala 1',
+            seats: [
+              { row: 'A', number: '5' },
+              { row: 'A', number: '6' }
+            ],
+            totalAmount: 2000
+          };
+          
+          setReservation(mockReservation);
+          
+          // Mock de tipos de tickets
+          setSelectedTickets([
+            { type: 'adult', quantity: 2 }
+          ]);
         }
         
         setError(null);
       } catch (err) {
-        console.error('Error fetching data:', err);
+        console.error('Error loading data:', err);
         setError('No se pudieron cargar los datos. Por favor, intenta de nuevo más tarde.');
       } finally {
         setLoading(false);
       }
     };
-
-    fetchData();
-  }, [reservationId]);
-
-  const handleProductSelect = (productId: string, quantity: number) => {
-    if (quantity === 0) {
-      // Eliminar producto si la cantidad es 0
-      setSelectedProducts(prevProducts => 
-        prevProducts.filter(p => p.id !== productId)
-      );
-    } else {
-      // Verificar si el producto ya está seleccionado
-      const existingProduct = selectedProducts.find(p => p.id === productId);
-      
-      if (existingProduct) {
-        // Actualizar cantidad
-        setSelectedProducts(prevProducts => 
-          prevProducts.map(p => p.id === productId ? { ...p, quantity } : p)
-        );
-      } else {
-        // Agregar nuevo producto
-        setSelectedProducts(prevProducts => 
-          [...prevProducts, { id: productId, quantity }]
-        );
-      }
-    }
+    
+    loadData();
+  }, [reservationId, stateData]);
+  
+  // Manejar cambios en el método de pago
+  const handlePaymentMethodChange = (method: string) => {
+    setPaymentMethod(method);
   };
-
-  const handleComboSelect = (comboId: string, quantity: number) => {
-    if (quantity === 0) {
-      // Eliminar combo si la cantidad es 0
-      setSelectedCombos(prevCombos => 
-        prevCombos.filter(c => c.id !== comboId)
-      );
-    } else {
-      // Verificar si el combo ya está seleccionado
-      const existingCombo = selectedCombos.find(c => c.id === comboId);
-      
-      if (existingCombo) {
-        // Actualizar cantidad
-        setSelectedCombos(prevCombos => 
-          prevCombos.map(c => c.id === comboId ? { ...c, quantity } : c)
-        );
-      } else {
-        // Agregar nuevo combo
-        setSelectedCombos(prevCombos => 
-          [...prevCombos, { id: comboId, quantity }]
-        );
-      }
-    }
-  };
-
-  const handlePaymentSubmit = async (e: React.FormEvent) => {
+  
+  // Manejar envío del formulario de pago
+  const handleSubmitPayment = (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!reservationId) return;
-    
-    try {
-      setProcessing(true);
-      setError(null);
-      
-      // 1. Crear orden
-      const orderRequest = {
-        reservationId,
-        productItems: selectedProducts.map(p => ({
-          productId: p.id,
-          quantity: p.quantity
-        })),
-        comboItems: selectedCombos.map(c => ({
-          comboId: c.id,
-          quantity: c.quantity
-        })),
-        customerEmail,
-        promotionCode: ''
-      };
-      
-      const order = await orderService.createOrder(orderRequest);
-      setOrderId(order.id);
-      
-      // 2. Procesar pago
-      if (paymentMethod === 'card') {
-        const paymentRequest = {
-          paymentMethod,
-          cardNumber: cardDetails.cardNumber,
-          cardholderName: cardDetails.cardholderName,
-          expirationDate: cardDetails.expirationDate,
-          cvv: cardDetails.cvv
-        };
-        
-        const paymentResult = await paymentService.processPayment(order.id, paymentRequest);
-        
-        if (paymentResult.success) {
-          // Pago exitoso
-          setSuccess(true);
-        } else {
-          // Error en el pago
-          setError(paymentResult.message || 'Hubo un problema con el pago. Por favor, intenta de nuevo.');
-        }
-      } else if (paymentMethod === 'mercadopago') {
-        // Implementar integración con MercadoPago
-        const paymentRequest = {
-          paymentMethod: 'mercadopago'
-        };
-        
-        const paymentResult = await paymentService.processPayment(order.id, paymentRequest);
-        
-        if (paymentResult.redirectUrl) {
-          // Redirigir a MercadoPago para completar el pago
-          window.location.href = paymentResult.redirectUrl;
-          return;
-        } else {
-          setError('No se pudo iniciar el proceso de pago con MercadoPago.');
-        }
+    // Validación básica
+    if (paymentMethod === 'card') {
+      if (!cardDetails.cardNumber || !cardDetails.cardholderName || 
+          !cardDetails.expirationDate || !cardDetails.cvv) {
+        setError('Por favor completa todos los campos de la tarjeta.');
+        return;
       }
-    } catch (err: any) {
-      console.error('Error processing payment:', err);
-      setError(err.response?.data?.message || 'Hubo un problema al procesar el pago. Por favor, intenta de nuevo.');
-    } finally {
-      setProcessing(false);
     }
+    
+    if (!customerInfo.email) {
+      setError('Por favor ingresa tu email para recibir los tickets.');
+      return;
+    }
+    
+    // Iniciar procesamiento
+    setProcessing(true);
+    setError(null);
+    
+    // Simular procesamiento de pago
+    setTimeout(() => {
+      setProcessing(false);
+      
+      // Simulamos un ID de orden
+      const generatedOrderId = `ORD-${Date.now().toString().substring(7)}`;
+      setOrderId(generatedOrderId);
+      
+      // Marcamos como exitoso
+      setSuccess(true);
+    }, 2000);
   };
-
-  // Calcular subtotal de productos y combos
-  const calculateProductsTotal = () => {
-    return selectedProducts.reduce((total, item) => {
-      const product = products.find(p => p.id === item.id);
-      return total + (product ? product.price * item.quantity : 0);
+  
+  // Calcular total de productos candy
+  const calculateCandyTotal = () => {
+    return candyItems.reduce((total, item) => {
+      // Aplicar descuento si existe
+      const price = item.product.discount 
+        ? item.product.price * (1 - item.product.discount / 100)
+        : item.product.price;
+      
+      return total + (price * item.quantity);
     }, 0);
   };
-
-  const calculateCombosTotal = () => {
-    return selectedCombos.reduce((total, item) => {
-      const combo = combos.find(c => c.id === item.id);
-      return total + (combo ? combo.price * item.quantity : 0);
-    }, 0);
-  };
-
+  
   // Calcular total general
   const calculateTotal = () => {
     if (!reservation) return 0;
     
-    return reservation.totalAmount + calculateProductsTotal() + calculateCombosTotal();
+    return reservation.totalAmount + calculateCandyTotal();
   };
-
+  
+  // Formatear fecha/hora
+  const formatDateTime = (dateTimeStr: string) => {
+    try {
+      const date = new Date(dateTimeStr);
+      return date.toLocaleString('es-AR', {
+        weekday: 'long',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+    } catch (e) {
+      return dateTimeStr;
+    }
+  };
+  
   if (loading) {
     return (
       <Container className="py-5 text-center">
@@ -215,7 +229,7 @@ const Payment: React.FC = () => {
       </Container>
     );
   }
-
+  
   if (error && !success) {
     return (
       <Container className="py-5">
@@ -224,7 +238,7 @@ const Payment: React.FC = () => {
       </Container>
     );
   }
-
+  
   if (success) {
     return (
       <Container className="py-5">
@@ -238,8 +252,8 @@ const Payment: React.FC = () => {
             <p>Hemos enviado los detalles y los códigos QR a tu correo electrónico.</p>
             
             <div className="mt-4">
-              <Button variant="primary" onClick={() => navigate(`/orders/${orderId}/tickets`)}>
-                Ver mis entradas
+              <Button variant="primary" onClick={() => navigate('/')}>
+                Volver al inicio
               </Button>
             </div>
           </Card.Body>
@@ -247,7 +261,7 @@ const Payment: React.FC = () => {
       </Container>
     );
   }
-
+  
   if (!reservation) {
     return (
       <Container className="py-5">
@@ -256,7 +270,7 @@ const Payment: React.FC = () => {
       </Container>
     );
   }
-
+  
   return (
     <Container className="py-5">
       <h1 className="mb-4">Finalizar Compra</h1>
@@ -269,112 +283,64 @@ const Payment: React.FC = () => {
             </Card.Header>
             <Card.Body>
               <h5>{reservation.movieTitle}</h5>
-              <p className="mb-1"><strong>Función:</strong> {new Date(reservation.startTime).toLocaleString([], { 
-                weekday: 'long',
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric',
-                hour: '2-digit',
-                minute: '2-digit'
-              })}</p>
+              <p className="mb-1"><strong>Función:</strong> {formatDateTime(reservation.startTime)}</p>
               <p className="mb-1"><strong>Sala:</strong> {reservation.roomName}</p>
-              <p className="mb-3"><strong>Asientos:</strong> {reservation.seats.map((s: any) => `${s.row}${s.number}`).join(', ')}</p>
+              <p className="mb-3">
+                <strong>Asientos:</strong> {reservation.seats.map(s => `${s.row}${s.number}`).join(', ')}
+              </p>
               
               <div className="d-flex justify-content-between fw-bold">
                 <span>Subtotal Entradas:</span>
-                <span>${reservation.totalAmount}</span>
+                <span>${reservation.totalAmount.toLocaleString('es-AR')}</span>
               </div>
             </Card.Body>
           </Card>
           
-          <Card className="mb-4">
-            <Card.Header>
-              <h4 className="mb-0">¿Deseas agregar productos?</h4>
-            </Card.Header>
-            <Card.Body>
-              <Row>
-                <Col md={6}>
-                  <h5 className="mb-3">Productos</h5>
-                  {products.map(product => {
-                    const selectedProduct = selectedProducts.find(p => p.id === product.id);
-                    const quantity = selectedProduct ? selectedProduct.quantity : 0;
-                    
-                    return (
-                      <div key={product.id} className="product-item mb-3 p-2 border rounded">
-                        <div className="d-flex justify-content-between mb-2">
-                          <span>{product.name}</span>
-                          <span>${product.price}</span>
-                        </div>
-                        <div className="d-flex justify-content-end">
-                          <div className="quantity-control">
-                            <Button
-                              variant="outline-secondary"
-                              size="sm"
-                              onClick={() => handleProductSelect(product.id, Math.max(0, quantity - 1))}
-                            >
-                              -
-                            </Button>
-                            <span className="mx-2">{quantity}</span>
-                            <Button
-                              variant="outline-secondary"
-                              size="sm"
-                              onClick={() => handleProductSelect(product.id, quantity + 1)}
-                            >
-                              +
-                            </Button>
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </Col>
-                
-                <Col md={6}>
-                  <h5 className="mb-3">Combos</h5>
-                  {combos.map(combo => {
-                    const selectedCombo = selectedCombos.find(c => c.id === combo.id);
-                    const quantity = selectedCombo ? selectedCombo.quantity : 0;
-                    
-                    return (
-                      <div key={combo.id} className="combo-item mb-3 p-2 border rounded">
-                        <div className="d-flex justify-content-between mb-2">
-                          <span>{combo.name}</span>
-                          <span>${combo.price}</span>
-                        </div>
-                        <p className="small text-muted">{combo.description}</p>
-                        <div className="d-flex justify-content-end">
-                          <div className="quantity-control">
-                            <Button
-                              variant="outline-secondary"
-                              size="sm"
-                              onClick={() => handleComboSelect(combo.id, Math.max(0, quantity - 1))}
-                            >
-                              -
-                            </Button>
-                            <span className="mx-2">{quantity}</span>
-                            <Button
-                              variant="outline-secondary"
-                              size="sm"
-                              onClick={() => handleComboSelect(combo.id, quantity + 1)}
-                            >
-                              +
-                            </Button>
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </Col>
-              </Row>
-            </Card.Body>
-          </Card>
+          {/* Mostrar productos Candy si hay */}
+          {candyItems.length > 0 && (
+            <Card className="mb-4">
+              <Card.Header>
+                <h4 className="mb-0">Productos seleccionados</h4>
+              </Card.Header>
+              <Card.Body>
+                <div className="table-responsive">
+                  <table className="table">
+                    <thead>
+                      <tr>
+                        <th>Producto</th>
+                        <th className="text-center">Cantidad</th>
+                        <th className="text-end">Precio Unitario</th>
+                        <th className="text-end">Subtotal</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {candyItems.map((item, index) => (
+                        <tr key={index}>
+                          <td>{item.product.name}</td>
+                          <td className="text-center">{item.quantity}</td>
+                          <td className="text-end">${item.product.price}</td>
+                          <td className="text-end">${(item.product.price * item.quantity).toLocaleString('es-AR')}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                    <tfoot>
+                      <tr>
+                        <th colSpan={3} className="text-end">Total Productos:</th>
+                        <th className="text-end">${calculateCandyTotal().toLocaleString('es-AR')}</th>
+                      </tr>
+                    </tfoot>
+                  </table>
+                </div>
+              </Card.Body>
+            </Card>
+          )}
           
           <Card className="mb-4">
             <Card.Header>
               <h4 className="mb-0">Información de Pago</h4>
             </Card.Header>
             <Card.Body>
-              <Form onSubmit={handlePaymentSubmit}>
+              <Form onSubmit={handleSubmitPayment}>
                 <div className="mb-4">
                   <h5 className="mb-3">Método de Pago</h5>
                   <div className="d-flex gap-3 mb-3">
@@ -384,7 +350,7 @@ const Payment: React.FC = () => {
                       id="card"
                       label="Tarjeta de Crédito/Débito"
                       checked={paymentMethod === 'card'}
-                      onChange={() => setPaymentMethod('card')}
+                      onChange={() => handlePaymentMethodChange('card')}
                     />
                     <Form.Check
                       type="radio"
@@ -392,7 +358,7 @@ const Payment: React.FC = () => {
                       id="mercadopago"
                       label="MercadoPago"
                       checked={paymentMethod === 'mercadopago'}
-                      onChange={() => setPaymentMethod('mercadopago')}
+                      onChange={() => handlePaymentMethodChange('mercadopago')}
                     />
                   </div>
                 </div>
@@ -455,8 +421,8 @@ const Payment: React.FC = () => {
                   <Form.Control
                     type="email"
                     placeholder="tucorreo@ejemplo.com"
-                    value={customerEmail}
-                    onChange={(e) => setCustomerEmail(e.target.value)}
+                    value={customerInfo.email}
+                    onChange={(e) => setCustomerInfo({...customerInfo, email: e.target.value})}
                     required
                   />
                 </Form.Group>
@@ -481,7 +447,7 @@ const Payment: React.FC = () => {
                       Procesando...
                     </>
                   ) : (
-                    `Pagar $${calculateTotal()}`
+                    `Pagar $${calculateTotal().toLocaleString('es-AR')}`
                   )}
                 </Button>
               </Form>
@@ -498,19 +464,23 @@ const Payment: React.FC = () => {
               <div className="mb-3">
                 <h5>{reservation.movieTitle}</h5>
                 <p className="mb-1">
-                  <strong>Función:</strong> {new Date(reservation.startTime).toLocaleTimeString([], { 
-                    hour: '2-digit', 
-                    minute: '2-digit' 
-                  })}
+                  <strong>Función:</strong> {
+                    new Date(reservation.startTime).toLocaleTimeString([], { 
+                      hour: '2-digit', 
+                      minute: '2-digit' 
+                    })
+                  }
                 </p>
                 <p className="mb-1">
-                  <strong>Fecha:</strong> {new Date(reservation.startTime).toLocaleDateString()}
+                  <strong>Fecha:</strong> {
+                    new Date(reservation.startTime).toLocaleDateString()
+                  }
                 </p>
                 <p className="mb-1">
                   <strong>Sala:</strong> {reservation.roomName}
                 </p>
                 <p className="mb-0">
-                  <strong>Asientos:</strong> {reservation.seats.map((s: any) => `${s.row}${s.number}`).join(', ')}
+                  <strong>Asientos:</strong> {reservation.seats.map(s => `${s.row}${s.number}`).join(', ')}
                 </p>
               </div>
               
@@ -518,20 +488,13 @@ const Payment: React.FC = () => {
               
               <div className="d-flex justify-content-between mb-2">
                 <span>Subtotal Entradas:</span>
-                <span>${reservation.totalAmount}</span>
+                <span>${reservation.totalAmount.toLocaleString('es-AR')}</span>
               </div>
               
-              {calculateProductsTotal() > 0 && (
+              {candyItems.length > 0 && (
                 <div className="d-flex justify-content-between mb-2">
-                  <span>Productos:</span>
-                  <span>${calculateProductsTotal()}</span>
-                </div>
-              )}
-              
-              {calculateCombosTotal() > 0 && (
-                <div className="d-flex justify-content-between mb-2">
-                  <span>Combos:</span>
-                  <span>${calculateCombosTotal()}</span>
+                  <span>Productos Candy:</span>
+                  <span>${calculateCandyTotal().toLocaleString('es-AR')}</span>
                 </div>
               )}
               
@@ -539,7 +502,7 @@ const Payment: React.FC = () => {
               
               <div className="d-flex justify-content-between fs-5 fw-bold mb-0">
                 <span>Total:</span>
-                <span>${calculateTotal()}</span>
+                <span>${calculateTotal().toLocaleString('es-AR')}</span>
               </div>
               
               <div className="mt-4 small text-muted">
@@ -549,7 +512,7 @@ const Payment: React.FC = () => {
                 </p>
                 <p className="mb-0">
                   <i className="bi bi-clock-history me-1"></i>
-                  Tu reserva expira en: {new Date(reservation.expiresAt).toLocaleTimeString()}
+                  Tu reserva expira en 15 minutos
                 </p>
               </div>
             </Card.Body>

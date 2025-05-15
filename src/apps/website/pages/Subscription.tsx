@@ -8,7 +8,7 @@ import { useTheme } from '../../../common/context/ThemeContext';
 const subscriptionPlans = [
   {
     id: 'monthly',
-    name: 'Premium Mensual',
+    name: 'Pago Mensual',
     price: 1200,
     description: 'Acceso a todos los beneficios Premium renovado mensualmente.',
     popular: false,
@@ -17,7 +17,7 @@ const subscriptionPlans = [
   },
   {
     id: 'quarterly',
-    name: 'Premium Trimestral',
+    name: 'Pago Trimestral',
     price: 3000,
     originalPrice: 3600,
     description: 'Ahorra un 17% con el plan trimestral. Renovación cada 3 meses.',
@@ -28,7 +28,7 @@ const subscriptionPlans = [
   },
   {
     id: 'annual',
-    name: 'Premium Anual',
+    name: 'Pago Anual',
     price: 9600,
     originalPrice: 14400,
     description: 'Máximo ahorro con el plan anual. Renovación anual.',
@@ -44,7 +44,7 @@ const benefits = [
   {
     icon: 'ticket-perforated-fill',
     title: '2 Entradas Gratis Mensualmente',
-    description: 'Cada mes recibirás 2 entradas para cualquier película que desees.'
+    description: 'Cada mes recibirás 2 entradas para cualquier película que desees. *Acumulable por un maximo de 90 dias*'
   },
   {
     icon: 'percent',
@@ -152,7 +152,7 @@ const Subscription: React.FC = () => {
                 <div className="mb-4 text-success">
                   <i className="bi bi-check-circle-fill" style={{ fontSize: '4rem' }}></i>
                 </div>
-                <h2 className="mb-3">¡Bienvenido al Club Premium!</h2>
+                <h2 className="mb-3">¡Bienvenido al Club Annuar!</h2>
                 <p className="mb-4">Tu suscripción {selectedPlanDetails.name} ha sido activada correctamente.</p>
                 <div className="alert alert-success">
                   <i className="bi bi-info-circle-fill me-2"></i>
@@ -162,7 +162,7 @@ const Subscription: React.FC = () => {
                 <div className="mt-4">
                   <p>Ya puedes empezar a disfrutar de todos los beneficios Premium:</p>
                   <ul className="list-unstyled">
-                    <li><i className="bi bi-check-circle-fill text-success me-2"></i> 2 entradas gratis disponibles este mes</li>
+                    <li><i className="bi bi-check-circle-fill text-success me-2"></i> 2 entradas gratis disponibles cada mes</li>
                     <li><i className="bi bi-check-circle-fill text-success me-2"></i> 10% de descuento adicional en Candy</li>
                     <li><i className="bi bi-check-circle-fill text-success me-2"></i> Acceso a preventas y eventos exclusivos</li>
                   </ul>
@@ -187,16 +187,16 @@ const Subscription: React.FC = () => {
   }
   
   return (
-    <Container className="py-5">
+    <Container className="py-1">
       <Row className="justify-content-center mb-5">
         <Col md={10} lg={8}>
           <div className="text-center mb-4">
-            <h1 className="display-4 mb-3">Club Premium Annuar</h1>
+            <h1 className="display-4 mb-3">Club Annuar +</h1>
             <p className="lead">Disfruta del cine al máximo con beneficios exclusivos</p>
           </div>
           
           <div className="benefits-list my-5">
-            <h2 className="text-center mb-4">¿Por qué hacerte Premium?</h2>
+            <h2 className="text-center mb-4">¿Por qué hacerte del Club Annuar +?</h2>
             <Row xs={1} md={2} lg={3} className="g-4">
               {benefits.map((benefit, index) => (
                 <Col key={index}>

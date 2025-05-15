@@ -41,6 +41,8 @@ import ValidatorSettings from './apps/validator/pages/ValidatorSettings';
 
 // Other
 import DebugAuth from './apps/website/pages/DebugAuth';
+import EmployeeSalesMetrics from './apps/admin/pages/EmployeeSalesMetrics';
+import MovieLicenseContracts from './apps/admin/pages/MovieLicenseContracts';
 
 const AppRoutes: React.FC = () => {
   return (
@@ -79,6 +81,8 @@ const AppRoutes: React.FC = () => {
         <Route path="shows" element={<ShowManagement />} />
         <Route path="products" element={<ProductManagement />} />
         <Route path="users" element={<UserManagement />} />
+        <Route path="employee" element={<EmployeeSalesMetrics />} />
+        <Route path="license" element={<MovieLicenseContracts />} />
         <Route path="reports/sales" element={<ReportingSales />} />
         <Route path="settings" element={<AdminSettings />} />
       </Route>

@@ -310,7 +310,7 @@ const Profile: React.FC = () => {
                   <Button
                     variant="outline-warning"
                     size="sm"
-                    onClick={() => navigate('/movies')}
+                    onClick={() => navigate('/')}
                   >
                     Usar entrada gratis
                   </Button>
