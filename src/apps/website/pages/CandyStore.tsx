@@ -1,9 +1,8 @@
-// src/apps/website/pages/CandyStore.tsx
 import React, { useState, useEffect } from 'react';
 import { Container, Row, Col, Card, Button, Badge, Spinner, Alert } from 'react-bootstrap';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useTheme } from '../../../common/context/ThemeContext';
-import { Link } from 'react-router-dom';
+import CandyPricingComparison from '../components/CandyPricingComparison';
 
 // Mock data for candy products
 const candyProducts = [
@@ -15,7 +14,8 @@ const candyProducts = [
     imageUrl: 'https://static.cinemarkhoyts.com.ar/Images/ConcessionItemImageN/A000000198.png?v=00002574',
     category: 'combos',
     discount: 20,
-    popular: true
+    popular: true,
+    stock: 35
   },
   {
     id: '2',
@@ -25,7 +25,8 @@ const candyProducts = [
     imageUrl: 'https://static.cinemarkhoyts.com.ar/Images/ConcessionItemImageN/A000000196.png?v=00002574',
     category: 'combos',
     discount: 15,
-    popular: true
+    popular: true,
+    stock: 25
   },
   {
     id: '3',
@@ -34,7 +35,8 @@ const candyProducts = [
     price: 800,
     imageUrl: 'https://static.cinemarkhoyts.com.ar/Images/ConcessionItemImageN/A000000011.png?v=00002574',
     category: 'popcorn',
-    popular: true
+    popular: true,
+    stock: 80
   },
   {
     id: '4',
@@ -42,7 +44,8 @@ const candyProducts = [
     description: 'Popcorn recién hecho en balde mediano',
     price: 600,
     imageUrl: 'https://static.cinemarkhoyts.com.ar/Images/ConcessionItemImageN/A000000010.png?v=00002574',
-    category: 'popcorn'
+    category: 'popcorn',
+    stock: 120
   },
   {
     id: '5',
@@ -51,7 +54,8 @@ const candyProducts = [
     price: 700,
     imageUrl: 'https://static.cinemarkhoyts.com.ar/Images/ConcessionItemImageN/A000000038.png?v=00002574',
     category: 'snacks',
-    popular: true
+    popular: true,
+    stock: 45
   },
   {
     id: '6',
@@ -59,7 +63,8 @@ const candyProducts = [
     description: 'Coca-Cola, Sprite o Fanta (selecciona al retirar)',
     price: 400,
     imageUrl: 'https://static.cinemarkhoyts.com.ar/Images/ConcessionItemImageN/A000000028.png?v=00002574',
-    category: 'drinks'
+    category: 'drinks',
+    stock: 150
   },
   {
     id: '7',
@@ -67,7 +72,8 @@ const candyProducts = [
     description: 'Coca-Cola, Sprite o Fanta (selecciona al retirar)',
     price: 300,
     imageUrl: 'https://static.cinemarkhoyts.com.ar/Images/ConcessionItemImageN/A000000027.png?v=00002574',
-    category: 'drinks'
+    category: 'drinks',
+    stock: 200
   },
   {
     id: '8',
@@ -75,7 +81,8 @@ const candyProducts = [
     description: 'Botella de agua mineral 500ml',
     price: 200,
     imageUrl: 'https://static.cinemarkhoyts.com.ar/Images/ConcessionItemImageN/A000000013.png?v=00002574',
-    category: 'drinks'
+    category: 'drinks',
+    stock: 120
   },
   {
     id: '9',
@@ -83,7 +90,8 @@ const candyProducts = [
     description: 'Barra de chocolate con leche',
     price: 250,
     imageUrl: 'https://static.cinemarkhoyts.com.ar/Images/ConcessionItemImageN/A000004153.png?v=00002574',
-    category: 'sweets'
+    category: 'sweets',
+    stock: 75
   }
 ];
 
@@ -100,7 +108,7 @@ const categories = [
 // Mock user data (normally would come from context)
 const mockUser = {
   isAuthenticated: true,
-  isPremium: false,
+  isPremium: true,
   name: 'Usuario de Prueba'
 };
 
@@ -119,27 +127,55 @@ const CandyStore: React.FC = () => {
   const [cart, setCart] = useState<CartItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [showSuccessAlert, setShowSuccessAlert] = useState(false);
+  const [showLowStockAlert, setShowLowStockAlert] = useState(false);
+  const [localProducts, setLocalProducts] = useState(candyProducts);
   
   // Check if we're coming from ticket selection
   const fromTicketSelection = location.state?.fromTicketSelection || false;
   const reservationId = location.state?.reservationId || 'mock-reservation-123';
   
   // Calculate total items and price in cart
-  const cartTotal = cart.reduce((total, item) => total + (item.product.price * item.quantity), 0);
+  const cartTotal = cart.reduce((total, item) => {
+    // Apply premium discount if applicable
+    const price = mockUser.isPremium && item.product.discount 
+      ? item.product.price * (1 - item.product.discount / 100)
+      : item.product.price;
+    
+    return total + (price * item.quantity);
+  }, 0);
+  
+  const regularCartTotal = cart.reduce((total, item) => {
+    return total + (item.product.price * item.quantity);
+  }, 0);
+  
   const cartItemCount = cart.reduce((count, item) => count + item.quantity, 0);
   
   // Filter products by category
   const filteredProducts = selectedCategory === 'all' 
-    ? candyProducts 
-    : candyProducts.filter(product => product.category === selectedCategory);
+    ? localProducts 
+    : localProducts.filter(product => product.category === selectedCategory);
   
   // Add to cart function
   const addToCart = (product: any) => {
+    // Check if product has stock
+    if (product.stock <= 0) {
+      setShowLowStockAlert(true);
+      setTimeout(() => setShowLowStockAlert(false), 3000);
+      return;
+    }
+    
     setCart(prevCart => {
       // Check if product already in cart
       const existingItem = prevCart.find(item => item.product.id === product.id);
       
       if (existingItem) {
+        // Check if trying to add more than available stock
+        if (existingItem.quantity >= product.stock) {
+          setShowLowStockAlert(true);
+          setTimeout(() => setShowLowStockAlert(false), 3000);
+          return prevCart;
+        }
+        
         // Increment quantity if already in cart
         return prevCart.map(item => 
           item.product.id === product.id 
@@ -152,6 +188,15 @@ const CandyStore: React.FC = () => {
       }
     });
     
+    // Update product stock
+    setLocalProducts(prevProducts => 
+      prevProducts.map(p => 
+        p.id === product.id 
+          ? { ...p, stock: p.stock - 1 }
+          : p
+      )
+    );
+    
     // Show success message
     setShowSuccessAlert(true);
     setTimeout(() => setShowSuccessAlert(false), 2000);
@@ -159,7 +204,23 @@ const CandyStore: React.FC = () => {
   
   // Remove from cart
   const removeFromCart = (productId: string) => {
+    // Get quantity of product in cart before removing
+    const itemInCart = cart.find(item => item.product.id === productId);
+    const quantityToRestore = itemInCart ? itemInCart.quantity : 0;
+    
+    // Remove from cart
     setCart(prevCart => prevCart.filter(item => item.product.id !== productId));
+    
+    // Restore stock
+    if (quantityToRestore > 0) {
+      setLocalProducts(prevProducts => 
+        prevProducts.map(p => 
+          p.id === productId 
+            ? { ...p, stock: p.stock + quantityToRestore }
+            : p
+        )
+      );
+    }
   };
   
   // Update quantity
@@ -169,11 +230,38 @@ const CandyStore: React.FC = () => {
       return;
     }
     
+    // Find product in local products
+    const product = localProducts.find(p => p.id === productId);
+    if (!product) return;
+    
+    // Find current quantity in cart
+    const currentItem = cart.find(item => item.product.id === productId);
+    const currentQuantity = currentItem ? currentItem.quantity : 0;
+    
+    // Check if trying to add more than available stock
+    const availableStock = product.stock + currentQuantity;
+    if (newQuantity > availableStock) {
+      setShowLowStockAlert(true);
+      setTimeout(() => setShowLowStockAlert(false), 3000);
+      return;
+    }
+    
+    // Update cart
     setCart(prevCart => 
       prevCart.map(item => 
         item.product.id === productId 
           ? { ...item, quantity: newQuantity } 
           : item
+      )
+    );
+    
+    // Update product stock
+    const stockDifference = currentQuantity - newQuantity;
+    setLocalProducts(prevProducts => 
+      prevProducts.map(p => 
+        p.id === productId 
+          ? { ...p, stock: p.stock + stockDifference }
+          : p
       )
     );
   };
@@ -189,13 +277,10 @@ const CandyStore: React.FC = () => {
     return item ? item.quantity : 0;
   };
   
-  // Calculate final price with discount
-  const calculatePrice = (product: any) => {
-    if (!product.discount) return product.price;
-    
-    // Apply additional discount for premium users
-    const discountPercentage = product.discount + (mockUser.isPremium ? 10 : 0);
-    return product.price * (1 - discountPercentage / 100);
+  // Calculate premium discount price
+  const calculateDiscountedPrice = (product: any) => {
+    if (!mockUser.isPremium || !product.discount) return product.price;
+    return product.price * (1 - product.discount / 100);
   };
   
   // Continue to checkout
@@ -229,6 +314,11 @@ const CandyStore: React.FC = () => {
     window.scrollTo(0, 0);
   }, []);
   
+  // Find product with highest discount for comparison
+  const highestDiscountProduct = localProducts
+    .filter(p => p.discount)
+    .sort((a, b) => (b.discount || 0) - (a.discount || 0))[0];
+  
   return (
     <Container className="py-5">
       {/* Success alert when adding items */}
@@ -242,13 +332,24 @@ const CandyStore: React.FC = () => {
         </Alert>
       )}
       
+      {/* Low stock alert */}
+      {showLowStockAlert && (
+        <Alert 
+          variant="warning" 
+          className="position-fixed top-0 start-50 translate-middle-x mt-4 z-index-toast"
+          style={{ zIndex: 1050 }}
+        >
+          Stock insuficiente para este producto
+        </Alert>
+      )}
+      
       <h1 className="mb-2">Tienda de Candy</h1>
       
       {mockUser.isPremium && (
         <div className="premium-badge mb-4">
           <Badge bg="warning" text="dark" className="p-2">
             <i className="bi bi-star-fill me-2"></i>
-            USUARIO PREMIUM - 10% EXTRA DE DESCUENTO EN COMBOS
+            USUARIO PREMIUM - DESCUENTOS EXCLUSIVOS EN COMBOS
           </Badge>
         </div>
       )}
@@ -277,6 +378,15 @@ const CandyStore: React.FC = () => {
             ))}
           </div>
           
+          {/* Price comparison for premium users */}
+          {highestDiscountProduct && (
+            <CandyPricingComparison 
+              regularPrice={highestDiscountProduct.price}
+              premiumDiscount={highestDiscountProduct.discount || 0}
+              isPremium={mockUser.isPremium}
+            />
+          )}
+          
           {/* Products Grid */}
           <Row xs={1} md={2} lg={3} className="g-4">
             {filteredProducts.map(product => (
@@ -294,8 +404,8 @@ const CandyStore: React.FC = () => {
                       <div className="position-absolute top-0 end-0 m-2">
                         <Badge bg="danger" className="p-2">
                           {mockUser.isPremium 
-                            ? `-${product.discount + 10}%` 
-                            : `-${product.discount}%`}
+                            ? `-${product.discount}%` 
+                            : product.discount ? 'PREMIUM' : ''}
                         </Badge>
                       </div>
                     )}
@@ -316,18 +426,20 @@ const CandyStore: React.FC = () => {
                     <div className="mt-auto">
                       <div className="d-flex justify-content-between align-items-center mb-3">
                         <div>
-                          {product.discount ? (
+                          {mockUser.isPremium && product.discount ? (
                             <>
                               <span className="text-muted text-decoration-line-through me-2">
                                 ${product.price}
                               </span>
-                              <span className="fw-bold text-danger">${calculatePrice(product)}</span>
+                              <span className="fw-bold text-danger">${calculateDiscountedPrice(product)}</span>
                             </>
                           ) : (
                             <span className="fw-bold">${product.price}</span>
                           )}
                         </div>
-                        <Badge bg="secondary">{product.category}</Badge>
+                        <Badge bg={product.stock > 10 ? 'success' : (product.stock > 0 ? 'warning' : 'danger')}>
+                          Stock: {product.stock}
+                        </Badge>
                       </div>
                       
                       {!isInCart(product.id) ? (
@@ -335,9 +447,10 @@ const CandyStore: React.FC = () => {
                           variant="primary" 
                           className="w-100"
                           onClick={() => addToCart(product)}
+                          disabled={product.stock <= 0}
                         >
                           <i className="bi bi-cart-plus me-2"></i>
-                          Agregar
+                          {product.stock > 0 ? 'Agregar' : 'Sin stock'}
                         </Button>
                       ) : (
                         <div className="d-flex justify-content-between align-items-center">
@@ -355,6 +468,7 @@ const CandyStore: React.FC = () => {
                             variant="outline-primary" 
                             size="sm"
                             onClick={() => updateQuantity(product.id, getQuantity(product.id) + 1)}
+                            disabled={product.stock <= 0}
                           >
                             <i className="bi bi-plus"></i>
                           </Button>
@@ -408,13 +522,23 @@ const CandyStore: React.FC = () => {
                             size="sm" 
                             className="p-0 px-1"
                             onClick={() => updateQuantity(item.product.id, item.quantity + 1)}
+                            disabled={localProducts.find(p => p.id === item.product.id)?.stock <= 0}
                           >
                             <i className="bi bi-plus"></i>
                           </Button>
                         </div>
                       </div>
                       <div className="d-flex flex-column align-items-end">
-                        <span>${item.product.price * item.quantity}</span>
+                        {mockUser.isPremium && item.product.discount ? (
+                          <>
+                            <span className="text-muted text-decoration-line-through small">
+                              ${item.product.price * item.quantity}
+                            </span>
+                            <span>${(calculateDiscountedPrice(item.product) * item.quantity).toFixed(2)}</span>
+                          </>
+                        ) : (
+                          <span>${item.product.price * item.quantity}</span>
+                        )}
                         <Button 
                           variant="link" 
                           className="p-0 text-danger" 
@@ -427,10 +551,26 @@ const CandyStore: React.FC = () => {
                   ))}
                   
                   {/* Cart Summary */}
+                  {mockUser.isPremium && cartTotal !== regularCartTotal && (
+                    <div className="d-flex justify-content-between text-muted mb-2">
+                      <span>Subtotal:</span>
+                      <span className="text-decoration-line-through">${regularCartTotal.toFixed(2)}</span>
+                    </div>
+                  )}
+                  
                   <div className="d-flex justify-content-between fw-bold mb-3">
                     <span>Total:</span>
-                    <span>${cartTotal}</span>
+                    <span>${cartTotal.toFixed(2)}</span>
                   </div>
+                  
+                  {mockUser.isPremium && cartTotal !== regularCartTotal && (
+                    <div className="alert alert-success p-2 text-center mb-3">
+                      <small>
+                        <i className="bi bi-piggy-bank-fill me-1"></i>
+                        Ahorro Premium: ${(regularCartTotal - cartTotal).toFixed(2)}
+                      </small>
+                    </div>
+                  )}
                   
                   {/* Checkout Button */}
                   <Button 
@@ -454,10 +594,10 @@ const CandyStore: React.FC = () => {
                   {/* Add Tickets Button */}
                   {!fromTicketSelection && (
                     <div className="text-center">
-                      <Link to="/movies" className="btn btn-link">
+                      <Button as="a" href="/movies" className="btn btn-link">
                         <i className="bi bi-ticket-perforated me-1"></i>
                         Agregar entradas
-                      </Link>
+                      </Button>
                     </div>
                   )}
                 </>

@@ -1,41 +1,46 @@
+import React from 'react';
+import { Card, Row, Col, Badge } from 'react-bootstrap';
 
-// Props interface
 interface CandyPricingProps {
   regularPrice: number;
   premiumDiscount: number; // percentage
   isPremium: boolean;
 }
 
-const CandyPricingComparison = ({ regularPrice, premiumDiscount, isPremium }: CandyPricingProps) => {
+const CandyPricingComparison: React.FC<CandyPricingProps> = ({ 
+  regularPrice, 
+  premiumDiscount, 
+  isPremium 
+}) => {
   // Calculate premium price with discount
   const premiumPrice = regularPrice * (1 - premiumDiscount / 100);
   const savingsAmount = regularPrice - premiumPrice;
   
   return (
-    <div className="card border-primary mb-4">
-      <div className="card-header bg-primary text-white">
+    <Card className="mb-4 border-primary">
+      <Card.Header className="bg-primary text-white">
         <h5 className="mb-0">Comparación de Precios Candy</h5>
-      </div>
-      <div className="card-body">
-        <div className="row">
-          <div className="col-md-6 border-end">
+      </Card.Header>
+      <Card.Body>
+        <Row>
+          <Col md={6} className="border-end">
             <div className="text-center mb-3">
               <h6>Precio Regular</h6>
               <h3>${regularPrice.toFixed(2)}</h3>
             </div>
-          </div>
-          <div className="col-md-6">
+          </Col>
+          <Col md={6}>
             <div className="text-center mb-3">
               <h6>
                 Precio Premium 
-                <span className="badge bg-warning text-dark ms-2">
+                <Badge bg="warning" text="dark" className="ms-2">
                   {premiumDiscount}% OFF
-                </span>
+                </Badge>
               </h6>
               <h3 className="text-primary">${premiumPrice.toFixed(2)}</h3>
             </div>
-          </div>
-        </div>
+          </Col>
+        </Row>
         
         {!isPremium && (
           <div className="text-center mt-3">
@@ -58,8 +63,8 @@ const CandyPricingComparison = ({ regularPrice, premiumDiscount, isPremium }: Ca
             Estás ahorrando <strong>${savingsAmount.toFixed(2)}</strong> con tu membresía premium
           </div>
         )}
-      </div>
-    </div>
+      </Card.Body>
+    </Card>
   );
 };
 
