@@ -1,25 +1,26 @@
 import React from 'react';
 import { Card, Row, Col, Badge } from 'react-bootstrap';
+import { Link } from 'react-router-dom';
 
-interface CandyPricingProps {
+interface TicketPriceComparisonProps {
   regularPrice: number;
-  premiumDiscount: number; // percentage
+  premiumPrice: number;
   isPremium: boolean;
+  discountPercentage: number;
 }
 
-const CandyPricingComparison: React.FC<CandyPricingProps> = ({ 
-  regularPrice, 
-  premiumDiscount, 
-  isPremium 
+const TicketPriceComparison: React.FC<TicketPriceComparisonProps> = ({
+  regularPrice,
+  premiumPrice,
+  isPremium,
+  discountPercentage
 }) => {
-  // Calculate premium price with discount
-  const premiumPrice = regularPrice * (1 - premiumDiscount / 100);
-  const savingsAmount = regularPrice - premiumPrice;
+  const savings = regularPrice - premiumPrice;
   
   return (
     <Card className="mb-4 border-primary">
       <Card.Header className="bg-primary text-white">
-        <h5 className="mb-0">Comparación de Precios Candy</h5>
+        <h5 className="mb-0">Comparación de Precios</h5>
       </Card.Header>
       <Card.Body>
         <Row>
@@ -34,7 +35,7 @@ const CandyPricingComparison: React.FC<CandyPricingProps> = ({
               <h6>
                 Precio Premium 
                 <Badge bg="warning" text="dark" className="ms-2">
-                  {premiumDiscount}% OFF
+                  {discountPercentage}% OFF
                 </Badge>
               </h6>
               <h3 className="text-primary">${premiumPrice.toFixed(2)}</h3>
@@ -45,22 +46,22 @@ const CandyPricingComparison: React.FC<CandyPricingProps> = ({
         {!isPremium && (
           <div className="text-center mt-3">
             <p className="mb-1">Haciéndote premium ahorrarías:</p>
-            <h4 className="text-success">${savingsAmount.toFixed(2)}</h4>
+            <h4 className="text-success">${savings.toFixed(2)}</h4>
             <p className="text-muted small">
               <i className="bi bi-info-circle me-1"></i>
-              Los usuarios premium obtienen {premiumDiscount}% de descuento en todos los productos de candy
+              Los usuarios premium obtienen {discountPercentage}% de descuento en todas las entradas
             </p>
-            <a href="/subscription" className="btn btn-sm btn-warning mt-2">
+            <Link to="/subscription" className="btn btn-sm btn-warning mt-2">
               <i className="bi bi-star-fill me-2"></i>
               Hazte Premium
-            </a>
+            </Link>
           </div>
         )}
         
         {isPremium && (
           <div className="alert alert-success text-center mt-3 mb-0">
             <i className="bi bi-check-circle-fill me-2"></i>
-            Estás ahorrando <strong>${savingsAmount.toFixed(2)}</strong> con tu membresía premium
+            Estás ahorrando <strong>${savings.toFixed(2)}</strong> con tu membresía premium
           </div>
         )}
       </Card.Body>
@@ -68,4 +69,4 @@ const CandyPricingComparison: React.FC<CandyPricingProps> = ({
   );
 };
 
-export default CandyPricingComparison;
+export default TicketPriceComparison;

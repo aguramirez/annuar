@@ -1,3 +1,138 @@
+import React, { useState } from 'react';
+import { mockPurchaseHistory } from '../../../data/mockData';
+
+interface PurchaseItem {
+  type: 'ticket' | 'product';
+  movie?: string;
+  name?: string;
+  quantity: number;
+  unitPrice: number;
+  showtime?: string;
+  seats?: string[];
+  room?: string;
+}
+
+interface Purchase {
+  id: string;
+  date: string;
+  total: number;
+  items: PurchaseItem[];
+  status: 'active' | 'completed' | 'canceled' | 'refunded' | 'partial_refund';
+  canCancel: boolean;
+  refundStatus: string | null;
+  refundAmount: number | null;
+  canceledReason: string | null;
+}
+
+const PurchaseHistoryComponent: React.FC = () => {
+  const [purchases, setPurchases] = useState<Purchase[]>(mockPurchaseHistory);
+  const [showCancelModal, setShowCancelModal] = useState(false);
+  const [showRefundModal, setShowRefundModal] = useState(false);
+  const [selectedPurchase, setSelectedPurchase] = useState<Purchase | null>(null);
+  const [cancelReason, setCancelReason] = useState('');
+  const [refundSelection, setRefundSelection] = useState<Record<number, boolean>>({});
+  const [successMessage, setSuccessMessage] = useState('');
+
+  // Handle cancel button
+  const handleCancel = (purchase: Purchase) => {
+    setSelectedPurchase(purchase);
+    setCancelReason('');
+    setShowCancelModal(true);
+  };
+
+  // Handle refund button
+  const handleRequestRefund = (purchase: Purchase) => {
+    setSelectedPurchase(purchase);
+    // Initialize refund selection to all items selected
+    const initialSelection: Record<number, boolean> = {};
+    purchase.items.forEach((_, index) => {
+      initialSelection[index] = true;
+    });
+    setRefundSelection(initialSelection);
+    setShowRefundModal(true);
+  };
+
+  // Close all modals
+  const handleCloseModal = () => {
+    setShowCancelModal(false);
+    setShowRefundModal(false);
+    setSelectedPurchase(null);
+  };
+
+  // Toggle item selection for refund
+  const toggleItemRefund = (index: number) => {
+    setRefundSelection(prev => ({
+      ...prev,
+      [index]: !prev[index]
+    }));
+  };
+
+  // Calculate refund amount based on selected items
+  const calculateRefundAmount = (): number => {
+    if (!selectedPurchase) return 0;
+    
+    return selectedPurchase.items.reduce((total, item, index) => {
+      if (refundSelection[index]) {
+        return total + (item.unitPrice * item.quantity);
+      }
+      return total;
+    }, 0);
+  };
+
+  // Confirm cancel purchase
+  const confirmCancel = () => {
+    if (!selectedPurchase || !cancelReason) return;
+    
+    // Simulate API call to cancel order
+    setTimeout(() => {
+      setPurchases(prev => 
+        prev.map(purchase => 
+          purchase.id === selectedPurchase.id
+            ? {
+                ...purchase,
+                status: 'canceled',
+                canCancel: false,
+                canceledReason: cancelReason
+              }
+            : purchase
+        )
+      );
+      
+      setSuccessMessage(`La reserva #${selectedPurchase.id} ha sido cancelada. Pronto recibirás un email con los detalles.`);
+      handleCloseModal();
+    }, 800);
+  };
+
+  // Confirm refund request
+  const confirmRefund = () => {
+    if (!selectedPurchase) return;
+    
+    const refundAmount = calculateRefundAmount();
+    if (refundAmount <= 0) return;
+    
+    // Simulate API call to process refund
+    setTimeout(() => {
+      // Check if all items are selected for refund
+      const allItemsSelected = Object.values(refundSelection).every(selected => selected);
+      
+      setPurchases(prev => 
+        prev.map(purchase => 
+          purchase.id === selectedPurchase.id
+            ? {
+                ...purchase,
+                status: allItemsSelected ? 'refunded' : 'partial_refund',
+                refundStatus: 'pending',
+                refundAmount: refundAmount
+              }
+            : purchase
+        )
+      );
+      
+      setSuccessMessage(`La solicitud de reembolso por $${refundAmount} ha sido enviada. Recibirás un email con los detalles.`);
+      handleCloseModal();
+    }, 800);
+  };
+
   return (
     <div className="purchase-history-container">
       <h4 className="mb-4">Historial de Compras</h4>
@@ -50,10 +185,10 @@
                         <div>
                           <div className="fw-bold">{item.movie}</div>
                           <div className="text-muted small">
-                            {new Date(item.showtime).toLocaleDateString('es-AR')} {item.showtime.split(' ')[1]} - {item.room}
+                            {item.showtime && new Date(item.showtime).toLocaleDateString('es-AR')} {item.showtime && item.showtime.split(' ')[1]} - {item.room}
                           </div>
                           <div className="text-muted small">
-                            Asientos: {item.seats.join(', ')}
+                            Asientos: {item.seats?.join(', ')}
                           </div>
                         </div>
                         <div className="text-end">
@@ -122,7 +257,7 @@
       
       {/* Cancel Modal */}
       {showCancelModal && selectedPurchase && (
-        <div className="modal show d-block" tabIndex="-1">
+        <div className="modal show d-block" tabIndex={-1}>
           <div className="modal-dialog">
             <div className="modal-content">
               <div className="modal-header">
@@ -136,7 +271,7 @@
                     .filter(item => item.type === 'ticket')
                     .map((item, index) => (
                       <li key={index}>
-                        <strong>{item.movie}</strong> - {new Date(item.showtime).toLocaleDateString('es-AR')} {item.showtime.split(' ')[1]}
+                        <strong>{item.movie}</strong> - {item.showtime && new Date(item.showtime).toLocaleDateString('es-AR')} {item.showtime && item.showtime.split(' ')[1]}
                       </li>
                     ))}
                 </ul>
@@ -183,7 +318,7 @@
       
       {/* Refund Modal */}
       {showRefundModal && selectedPurchase && (
-        <div className="modal show d-block" tabIndex="-1">
+        <div className="modal show d-block" tabIndex={-1}>
           <div className="modal-dialog">
             <div className="modal-content">
               <div className="modal-header">
@@ -207,7 +342,7 @@
                         <div>
                           {item.type === 'ticket' ? (
                             <>
-                              <strong>{item.movie}</strong> - {item.seats.join(', ')}
+                              <strong>{item.movie}</strong> - {item.seats?.join(', ')}
                             </>
                           ) : (
                             <strong>{item.name}</strong>
@@ -253,3 +388,6 @@
       )}
     </div>
   );
+};
+
+export default PurchaseHistoryComponent;

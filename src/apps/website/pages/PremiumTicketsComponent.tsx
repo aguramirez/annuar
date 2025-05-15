@@ -1,54 +1,45 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { mockPremiumTickets } from '../../../data/mockData';
 
-// Mock data for premium tickets - in real app, this would come from context or API
-const mockPremiumTickets = [
-  {
-    id: 'pt-1',
-    issueDate: '2025-03-01',
-    expiryDate: '2025-05-31',
-    status: 'available'
-  },
-  {
-    id: 'pt-2',
-    issueDate: '2025-03-01',
-    expiryDate: '2025-05-31',
-    status: 'available'
-  },
-  {
-    id: 'pt-3',
-    issueDate: '2025-02-01',
-    expiryDate: '2025-04-30',
-    status: 'available'
-  },
-  {
-    id: 'pt-4',
-    issueDate: '2025-02-01',
-    expiryDate: '2025-04-30',
-    status: 'used',
-    usedForMovieId: '2',
-    usedForMovieTitle: 'Capitan America: Un Nuevo Mundo',
-    usedDate: '2025-03-15'
-  }
-];
+interface PremiumTicket {
+  id: string;
+  issueDate: string;
+  expiryDate: string;
+  status: 'available' | 'used' | 'expired';
+  source: 'monthly' | 'refund';
+  usedForMovieId?: string;
+  usedForMovieTitle?: string;
+  usedDate?: string;
+  refundOrderId?: string;
+}
 
-const PremiumTicketsComponent = () => {
+const PremiumTicketsComponent: React.FC = () => {
   const [showUseModal, setShowUseModal] = useState(false);
-  const [selectedTicket, setSelectedTicket] = useState(null);
+  const [selectedTicket, setSelectedTicket] = useState<PremiumTicket | null>(null);
+  const navigate = useNavigate();
   
   // Group tickets by expiry month
-  const groupedTickets = {};
-  mockPremiumTickets.forEach(ticket => {
-    const expiryDate = new Date(ticket.expiryDate);
-    const monthYear = expiryDate.toLocaleString('default', { month: 'long', year: 'numeric' });
+  const groupTicketsByExpiryMonth = (tickets: PremiumTicket[]) => {
+    const grouped: Record<string, PremiumTicket[]> = {};
     
-    if (!groupedTickets[monthYear]) {
-      groupedTickets[monthYear] = [];
-    }
+    tickets.forEach(ticket => {
+      const expiryDate = new Date(ticket.expiryDate);
+      const monthYear = expiryDate.toLocaleString('default', { month: 'long', year: 'numeric' });
+      
+      if (!grouped[monthYear]) {
+        grouped[monthYear] = [];
+      }
+      
+      grouped[monthYear].push(ticket);
+    });
     
-    groupedTickets[monthYear].push(ticket);
-  });
+    return grouped;
+  };
   
-  const handleUseTicket = (ticket) => {
+  const groupedTickets = groupTicketsByExpiryMonth(mockPremiumTickets);
+  
+  const handleUseTicket = (ticket: PremiumTicket) => {
     setSelectedTicket(ticket);
     setShowUseModal(true);
   };
@@ -62,7 +53,8 @@ const PremiumTicketsComponent = () => {
     // In a real app, this would make an API call and navigate
     closeModal();
     // This would typically be: navigate('/movies');
-    alert('Navigating to movies page to select a movie');
+    console.log('Using ticket', selectedTicket?.id);
+    navigate('/cartelera');
   };
   
   return (
@@ -72,61 +64,70 @@ const PremiumTicketsComponent = () => {
         Mis Entradas Premium
       </h5>
       
-      {Object.entries(groupedTickets).map(([monthYear, tickets]) => (
-        <div key={monthYear} className="mb-4">
-          <h6 className="text-muted mb-3">
-            Expiran en: {monthYear}
-          </h6>
-          
-          <div className="row">
-            {tickets.map(ticket => (
-              <div key={ticket.id} className="col-md-6 mb-3">
-                <div className={`card h-100 ${ticket.status === 'used' ? 'border-secondary bg-light' : 'border-warning'}`}>
-                  <div className="card-body">
-                    <div className="d-flex justify-content-between">
-                      <h6 className="card-subtitle mb-2">
-                        Entrada Premium
-                      </h6>
-                      {ticket.status === 'used' ? (
-                        <span className="badge bg-secondary">Usada</span>
-                      ) : (
-                        <span className="badge bg-success">Disponible</span>
+      {Object.keys(groupedTickets).length > 0 ? (
+        Object.entries(groupedTickets).map(([monthYear, tickets]) => (
+          <div key={monthYear} className="mb-4">
+            <h6 className="text-muted mb-3">
+              Expiran en: {monthYear}
+            </h6>
+            
+            <div className="row">
+              {tickets.map(ticket => (
+                <div key={ticket.id} className="col-md-6 mb-3">
+                  <div className={`card h-100 ${ticket.status === 'used' ? 'border-secondary bg-light' : ticket.status === 'expired' ? 'border-danger bg-light' : 'border-warning'}`}>
+                    <div className="card-body">
+                      <div className="d-flex justify-content-between">
+                        <h6 className="card-subtitle mb-2">
+                          Entrada Premium
+                          {ticket.source === 'refund' && (
+                            <span className="badge bg-info ms-2" style={{ fontSize: '0.7rem' }}>Reembolso</span>
+                          )}
+                        </h6>
+                        {ticket.status === 'used' ? (
+                          <span className="badge bg-secondary">Usada</span>
+                        ) : ticket.status === 'expired' ? (
+                          <span className="badge bg-danger">Expirada</span>
+                        ) : (
+                          <span className="badge bg-success">Disponible</span>
+                        )}
+                      </div>
+
+                      <p className="mb-2 small">
+                        {ticket.status === 'used' && ticket.usedForMovieTitle ? (
+                          <span>
+                            Usada para <strong>{ticket.usedForMovieTitle}</strong>
+                            <br />
+                            {new Date(ticket.usedDate || '').toLocaleDateString('es-AR')}
+                          </span>
+                        ) : ticket.status === 'expired' ? (
+                          <span className="text-danger">
+                            Expiró el: <strong>{new Date(ticket.expiryDate).toLocaleDateString('es-AR')}</strong>
+                          </span>
+                        ) : (
+                          <span>
+                            Disponible desde: <strong>{new Date(ticket.issueDate).toLocaleDateString('es-AR')}</strong>
+                            <br />
+                            Válida hasta: <strong>{new Date(ticket.expiryDate).toLocaleDateString('es-AR')}</strong>
+                          </span>
+                        )}
+                      </p>
+
+                      {ticket.status === 'available' && (
+                        <button
+                          className="btn btn-warning btn-sm w-100"
+                          onClick={() => handleUseTicket(ticket)}
+                        >
+                          Usar ahora
+                        </button>
                       )}
                     </div>
-
-                    <p className="mb-2 small">
-                      {ticket.status === 'used' && ticket.usedForMovieTitle ? (
-                        <span>
-                          Usada para <strong>{ticket.usedForMovieTitle}</strong>
-                          <br />
-                          {new Date(ticket.usedDate).toLocaleDateString('es-AR')}
-                        </span>
-                      ) : (
-                        <span>
-                          Disponible desde: <strong>{new Date(ticket.issueDate).toLocaleDateString('es-AR')}</strong>
-                          <br />
-                          Válida hasta: <strong>{new Date(ticket.expiryDate).toLocaleDateString('es-AR')}</strong>
-                        </span>
-                      )}
-                    </p>
-
-                    {ticket.status !== 'used' && (
-                      <button
-                        className="btn btn-warning btn-sm w-100"
-                        onClick={() => handleUseTicket(ticket)}
-                      >
-                        Usar ahora
-                      </button>
-                    )}
                   </div>
                 </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
-        </div>
-      ))}
-      
-      {Object.keys(groupedTickets).length === 0 && (
+        ))
+      ) : (
         <div className="text-center py-4 text-muted">
           <i className="bi bi-ticket-perforated fs-1 mb-3"></i>
           <p>No tienes entradas premium disponibles</p>
@@ -134,8 +135,8 @@ const PremiumTicketsComponent = () => {
       )}
       
       {/* Modal for using a ticket */}
-      {showUseModal && (
-        <div className="modal show d-block">
+      {showUseModal && selectedTicket && (
+        <div className="modal show d-block" tabIndex={-1}>
           <div className="modal-dialog">
             <div className="modal-content">
               <div className="modal-header">
